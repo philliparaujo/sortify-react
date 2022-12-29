@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 // Log-in info
 //
@@ -7,10 +7,13 @@ const authInfo = {
   REDIRECT_URI: "http://localhost:3000",
   AUTH_ENDPOINT: "https://accounts.spotify.com/authorize",
   RESPONSE_TYPE: "token",
-  SCOPES: ["user-read-email", "user-library-read"],
+  SCOPES: ["user-read-email", "playlist-read-private"],
 };
 
 const getToken = () => {
+  if (window.localStorage.getItem("token"))
+    return window.localStorage.getItem("token");
+
   const hash = window.location.hash;
   if (!hash) return;
 
@@ -34,7 +37,7 @@ const login = () => {
     `&scope=${authInfo.SCOPES.join(" ")}`;
 };
 
-// Spotify API calls
+// Spotify API calls (returns Promises)
 //
 const genericAPI = (request, token) => {
   return fetch(`https://api.spotify.com/v1/${request}`, {
@@ -46,31 +49,44 @@ const genericAPI = (request, token) => {
 };
 
 const getDisplayName = (token) => {
-  return genericAPI("me", token).then((result) => result.display_name);
+  return genericAPI(`me`, token).then((result) => result.display_name);
 };
 
 const getID = (token) => {
-  return genericAPI("me", token).then((result) => result.id);
+  return genericAPI(`me`, token).then((result) => result.id);
 };
 
 const getEmail = (token) => {
   if (!authInfo.SCOPES.includes("user-read-email")) {
     throw new Error("No permission to read user email!");
   }
-  return genericAPI("me", token).then((result) => result.email);
+  return genericAPI(`me`, token).then((result) => result.email);
+};
+
+const getPlaylists = (token, user_id) => {
+  return genericAPI(`users/${user_id}/playlists`, token).then(
+    (result) => result.items
+  );
+};
+
+const getPlaylist = (token, playlist_id) => {
+  return genericAPI(`playlists/${playlist_id}`, token).then(
+    (result) => result.tracks
+  );
 };
 
 // Information passed to App.js, re-rendered on update
 //
 export function useApi() {
-  const [token, setToken] = React.useState();
+  const [token, setToken] = useState();
 
-  const [name, setName] = React.useState();
-  const [id, setID] = React.useState();
-  const [email, setEmail] = React.useState();
+  const [name, setName] = useState();
+  const [id, setID] = useState();
+  const [email, setEmail] = useState();
+  const [playlists, setPlaylists] = useState();
 
   // prevents repeated getToken calls to be undefined if hash already deleted
-  React.useEffect(() => {
+  useEffect(() => {
     const t = getToken();
     if (t) {
       setToken(t);
@@ -78,13 +94,15 @@ export function useApi() {
   }, []);
 
   // on token update, updates all related variables
-  React.useEffect(() => {
+  useEffect(() => {
     if (token) {
+      window.localStorage.setItem("token", token);
       // logged in
       getDisplayName(token).then((name) => setName(name));
       getID(token).then((id) => setID(id));
       getEmail(token).then((email) => setEmail(email));
     } else {
+      window.localStorage.removeItem("token");
       // logged out
       setName(undefined);
       setID(undefined);
@@ -92,13 +110,23 @@ export function useApi() {
     }
   }, [token]);
 
+  // on ID update, updates all related variables
+  useEffect(() => {
+    if (id) {
+      getPlaylists(token, id).then((playlist) => setPlaylists(playlist));
+    } else {
+      setPlaylists(undefined);
+    }
+  }, [id]);
+
   // passes information to App.js
   return {
     name: name,
     id: id,
     email: email,
-    isLoggedIn: token !== undefined,
+    isLoggedIn: window.localStorage.getItem("token") !== null,
     login: login,
     logout: () => setToken(undefined),
+    playlists: playlists,
   };
 }
