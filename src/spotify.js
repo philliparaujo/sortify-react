@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 // Log-in info
 //
@@ -7,7 +7,7 @@ const authInfo = {
   REDIRECT_URI: "http://localhost:3000",
   AUTH_ENDPOINT: "https://accounts.spotify.com/authorize",
   RESPONSE_TYPE: "token",
-  SCOPES: ["user-read-email", "playlist-read-private"],
+  SCOPES: ["user-read-email", "playlist-read-private", "user-library-read"],
 };
 
 const getToken = () => {
@@ -48,14 +48,17 @@ const genericAPI = (request, token) => {
   }).then((result) => result.json());
 };
 
+// string (within a Promise)
 const getDisplayName = (token) => {
   return genericAPI(`me`, token).then((result) => result.display_name);
 };
 
+// string (within a Promise)
 const getID = (token) => {
   return genericAPI(`me`, token).then((result) => result.id);
 };
 
+// string (within a Promise)
 const getEmail = (token) => {
   if (!authInfo.SCOPES.includes("user-read-email")) {
     throw new Error("No permission to read user email!");
@@ -63,15 +66,10 @@ const getEmail = (token) => {
   return genericAPI(`me`, token).then((result) => result.email);
 };
 
+// array of all playlists (within a Promise)
 const getPlaylists = (token, user_id) => {
   return genericAPI(`users/${user_id}/playlists`, token).then(
     (result) => result.items
-  );
-};
-
-const getPlaylist = (token, playlist_id) => {
-  return genericAPI(`playlists/${playlist_id}`, token).then(
-    (result) => result.tracks
   );
 };
 
@@ -89,6 +87,7 @@ export function useApi() {
   useEffect(() => {
     const t = getToken();
     if (t) {
+      console.log("setting token");
       setToken(t);
     }
   }, []);
@@ -111,22 +110,36 @@ export function useApi() {
   }, [token]);
 
   // on ID update, updates all related variables
-  useEffect(() => {
+  const refreshPlaylists = () => {
     if (id) {
       getPlaylists(token, id).then((playlist) => setPlaylists(playlist));
     } else {
       setPlaylists(undefined);
     }
-  }, [id]);
+  };
+  useEffect(() => refreshPlaylists(), [id]);
+
+  // JSON of specific playlist (within a Promise)
+  const getPlaylist = (playlist_id) => {
+    return genericAPI(`playlists/${playlist_id}`, token)
+      .then((result) => result.tracks)
+      .then((result) => result.items);
+  };
 
   // passes information to App.js
-  return {
-    name: name,
-    id: id,
-    email: email,
-    isLoggedIn: window.localStorage.getItem("token") !== null,
-    login: login,
-    logout: () => setToken(undefined),
-    playlists: playlists,
-  };
+  return token
+    ? {
+        name: name,
+        id: id,
+        email: email,
+        isLoggedIn: window.localStorage.getItem("token") !== null,
+        playlists: playlists,
+        logout: () => setToken(undefined),
+        refreshPlaylists: refreshPlaylists,
+        getPlaylist: getPlaylist,
+      }
+    : {
+        isLoggedIn: false,
+        login: login,
+      };
 }

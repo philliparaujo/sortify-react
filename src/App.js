@@ -1,58 +1,77 @@
 import "./App.css";
 import React, { useEffect, useState } from "react";
 import { useApi } from "./spotify.js";
+import { PlaylistPage } from "./playlistPage";
 
 function App() {
   const api = useApi();
+  const [playlistId, setPlaylistId] = useState();
 
-  // playlistToggle defaults
-  if (!localStorage.playlistToggle) {
-    localStorage.setItem("playlistToggle", false);
-  }
-  const [playlistToggle, setPlaylistToggle] = useState(
-    JSON.parse(localStorage.playlistToggle)
-  );
-
-  // playlistToggle toggles
-  const togglePlaylists = () => {
-    setPlaylistToggle(!playlistToggle);
-  };
-  useEffect(
-    () => localStorage.setItem("playlistToggle", playlistToggle),
-    [playlistToggle]
-  );
-
-  // API-hidden function extensions
-  const logout = () => {
-    api.logout();
-    if (JSON.parse(localStorage.playlistToggle)) togglePlaylists();
-  };
+  const selectedPlaylist =
+    api.playlists !== undefined && playlistId !== undefined
+      ? api.playlists[playlistId]
+      : null;
 
   return (
     <div className="App">
       <header className="App-header">
-        {api.name ? <p>Hi, {api.name}</p> : <p></p>}
-        <h1>Sortify</h1>
+        <h1>Sortify </h1>
       </header>
-      {!api.isLoggedIn ? (
-        <button onClick={api.login}>Login</button>
-      ) : (
-        <button onClick={logout}>Logout</button>
-      )}
-      {api.id ? (
-        <button onClick={togglePlaylists}>Toggle playlists</button>
-      ) : null}
-      {playlistToggle === true && api.playlists ? (
-        <div>
-          {api.playlists.map((playlist, index) => (
-            <a key={index} href={playlist.external_urls.spotify}>
-              {playlist.name}
-              <br></br>
-            </a>
-          ))}
-          <a href="www.google.com">Hi</a>
+
+      <div className="App-body">
+        <div className="nav-bar">
+          {api && api.name ? <p>Hi, {api.name} </p> : <p></p>}
+
+          {!api.isLoggedIn ? (
+            <button onClick={api.login}> Login </button>
+          ) : (
+            <button onClick={api.logout}> Logout </button>
+          )}
+
+          {api.id ? (
+            <div>
+              <button onClick={api.refreshPlaylists}> Refresh playlists</button>
+            </div>
+          ) : null}
+
+          {api.id ? (
+            selectedPlaylist ? (
+              <button onClick={() => setPlaylistId(undefined)}>
+                Deselect playlist
+              </button>
+            ) : (
+              <button disabled onClick={() => setPlaylistId(undefined)}>
+                Deselect playlist
+              </button>
+            )
+          ) : null}
+
+          {api.playlists ? (
+            <div>
+              {api.playlists.map((playlist, index) => (
+                <div>
+                  <button
+                    className="playlistTitles"
+                    key={index}
+                    onClick={() => setPlaylistId(index)}
+                  >
+                    {playlist.name}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
-      ) : null}
+
+        <div className="content">
+          {selectedPlaylist ? (
+            <PlaylistPage
+              playlist={selectedPlaylist}
+              getPlaylist={api.getPlaylist}
+            ></PlaylistPage>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
