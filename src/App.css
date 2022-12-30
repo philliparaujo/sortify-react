@@ -1,31 +1,33 @@
+/* Global attributes */
+#root,
+html,
+body {
+  height: 100%;
+}
+
+#root {
+  --headerHeight: 80px;
+}
+
 .App {
   text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  height: 100%;
+}
+
+/* Header */
+.App-header {
+  background-color: #282c34;
   font-size: calc(10px + 2vmin);
   color: white;
-  padding: 12pt;
+
+  align-items: center;
+  justify-content: center;
+  height: var(--headerHeight);
 }
 
 .App-header P {
-  height: 48px;
   margin: 0px;
 }
 
@@ -33,15 +35,40 @@
   margin: 0px;
 }
 
-.App-link {
-  color: #61dafb;
+/* Body */
+.App-body {
+  background-color: yellow;
+  display: flex;
+  min-height: calc(100% - var(--headerHeight));
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Nav bar */
+.nav-bar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  background-color: aquamarine;
+  width: 160px;
+}
+
+.playlistTitles {
+  border: 0;
+  background-color: transparent;
+  color: blue;
+}
+.playlistTitles:hover {
+  color: red;
+}
+
+/* Playlist Page */
+.content {
+  background-color: pink;
+  width: 100%;
+  display: block;
+  overflow: auto;
+}
+
+/* Debug */
+div {
+  outline: 2px solid red;
 }
