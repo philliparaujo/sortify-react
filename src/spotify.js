@@ -7,7 +7,14 @@ const authInfo = {
   REDIRECT_URI: "http://localhost:3000",
   AUTH_ENDPOINT: "https://accounts.spotify.com/authorize",
   RESPONSE_TYPE: "token",
-  SCOPES: ["user-read-email", "playlist-read-private", "user-library-read"],
+  SCOPES: [
+    "user-read-email",
+    "user-library-read",
+    "playlist-modify-public",
+    "user-library-modify",
+    // "playlist-read-private",
+    // "playlist-modify-private",
+  ],
 };
 
 const getToken = () => {
@@ -39,8 +46,11 @@ const login = () => {
 
 // Spotify API calls (returns Promises)
 //
-const genericAPI = (request, token) => {
-  return fetch(`https://api.spotify.com/v1/${request}`, {
+const baseURI = "https://api.spotify.com/v1";
+
+const genericGet = (request, token) => {
+  return fetch(`${baseURI}/${request}`, {
+    method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -48,14 +58,25 @@ const genericAPI = (request, token) => {
   }).then((result) => result.json());
 };
 
+const genericPost = (request, token, data) => {
+  return fetch(`${baseURI}/${request}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: data,
+  }).then((result) => result.json());
+};
+
 // string (within a Promise)
 const getDisplayName = (token) => {
-  return genericAPI(`me`, token).then((result) => result.display_name);
+  return genericGet(`me`, token).then((result) => result.display_name);
 };
 
 // string (within a Promise)
 const getID = (token) => {
-  return genericAPI(`me`, token).then((result) => result.id);
+  return genericGet(`me`, token).then((result) => result.id);
 };
 
 // string (within a Promise)
@@ -63,12 +84,12 @@ const getEmail = (token) => {
   if (!authInfo.SCOPES.includes("user-read-email")) {
     throw new Error("No permission to read user email!");
   }
-  return genericAPI(`me`, token).then((result) => result.email);
+  return genericGet(`me`, token).then((result) => result.email);
 };
 
 // array of all playlists (within a Promise)
 const getPlaylists = (token, user_id) => {
-  return genericAPI(`users/${user_id}/playlists`, token).then(
+  return genericGet(`users/${user_id}/playlists`, token).then(
     (result) => result.items
   );
 };
@@ -110,20 +131,42 @@ export function useApi() {
   }, [token]);
 
   // on ID update, updates all related variables
+  useEffect(() => refreshPlaylists(), [id]);
+
+  // sets playlists variable to array of all playlists
   const refreshPlaylists = () => {
     if (id) {
-      getPlaylists(token, id).then((playlist) => setPlaylists(playlist));
+      getPlaylists(token, id).then((result) => setPlaylists(result));
     } else {
       setPlaylists(undefined);
     }
   };
-  useEffect(() => refreshPlaylists(), [id]);
 
   // JSON of specific playlist (within a Promise)
   const getPlaylist = (playlist_id) => {
-    return genericAPI(`playlists/${playlist_id}`, token)
+    return genericGet(`playlists/${playlist_id}`, token)
       .then((result) => result.tracks)
       .then((result) => result.items);
+  };
+
+  // post public playlist request w/o description (within a Promise)
+  const createPlaylist = () => {
+    if (!authInfo.SCOPES.includes("playlist-modify-public")) {
+      throw new Error("No permission to modify public playlists!");
+    }
+
+    const title = document.getElementById("newPlaylistNameInput").value;
+    if (title === "") {
+      throw new Error("Title can't be empty!");
+    }
+
+    const data = JSON.stringify({
+      name: title,
+      public: true,
+    });
+    return genericPost(`users/${id}/playlists`, token, data)
+      .then(refreshPlaylists)
+      .then((document.getElementById("newPlaylistNameInput").value = ""));
   };
 
   // passes information to App.js
@@ -137,6 +180,7 @@ export function useApi() {
         logout: () => setToken(undefined),
         refreshPlaylists: refreshPlaylists,
         getPlaylist: getPlaylist,
+        createPlaylist: createPlaylist,
       }
     : {
         isLoggedIn: false,

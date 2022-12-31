@@ -12,6 +12,13 @@ function App() {
       ? api.playlists[playlistId]
       : null;
 
+  const deselectPlaylist = () => {
+    setPlaylistId(undefined);
+  };
+
+  // TODO: if token expires, delete it on refresh
+  // TODO: change playlistPage to remove the minimum info as props
+
   return (
     <div className="App">
       <header className="App-header">
@@ -34,22 +41,23 @@ function App() {
             </div>
           ) : null}
 
-          {api.id ? (
-            selectedPlaylist ? (
-              <button onClick={() => setPlaylistId(undefined)}>
-                Deselect playlist
-              </button>
-            ) : (
-              <button disabled onClick={() => setPlaylistId(undefined)}>
-                Deselect playlist
-              </button>
-            )
-          ) : null}
+          {selectedPlaylist ? (
+            <button onClick={deselectPlaylist}>Deselect playlist</button>
+          ) : (
+            <button disabled>Deselect playlist</button>
+          )}
+
+          <div>
+            {api.id ? (
+              <button onClick={api.createPlaylist}>Create Playlist</button>
+            ) : null}
+            <input id="newPlaylistNameInput" type="text" size="20"></input>
+          </div>
 
           {api.playlists ? (
             <div>
               {api.playlists.map((playlist, index) => (
-                <div>
+                <div key={index}>
                   <button
                     className="playlistTitles"
                     key={index}
@@ -67,7 +75,9 @@ function App() {
           {selectedPlaylist ? (
             <PlaylistPage
               playlist={selectedPlaylist}
+              refreshPlaylists={api.refreshPlaylists}
               getPlaylist={api.getPlaylist}
+              deselectPlaylist={deselectPlaylist}
             ></PlaylistPage>
           ) : null}
         </div>
