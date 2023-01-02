@@ -12,8 +12,35 @@ body {
 .App {
   text-align: center;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
+}
+
+/* Nav bar */
+.nav-bar {
+  /* position: fixed;
+  top: 0;
+  bottom: 0; */
+  background-color: aquamarine;
+  width: 320px;
+}
+
+.playlistTitles {
+  border: 0;
+  background-color: transparent;
+  color: blue;
+}
+.playlistTitles:hover {
+  color: red;
+}
+
+/* Body */
+.App-body {
+  background-color: yellow;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100% - var(--headerHeight));
+  flex: 1;
 }
 
 /* Header */
@@ -35,37 +62,34 @@ body {
   margin: 0px;
 }
 
-/* Body */
-.App-body {
-  background-color: yellow;
-  display: flex;
-  min-height: calc(100% - var(--headerHeight));
-}
-
-/* Nav bar */
-.nav-bar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  background-color: aquamarine;
-  width: 320px;
-}
-
-.playlistTitles {
-  border: 0;
-  background-color: transparent;
-  color: blue;
-}
-.playlistTitles:hover {
-  color: red;
-}
-
 /* Playlist Page */
 .content {
   background-color: pink;
   width: 100%;
-  display: block;
-  overflow: auto;
+  display: inline-block;
+}
+
+.container {
+  background-color: #333;
+  width: fit-content;
+  margin: auto;
+  padding: 1rem;
+}
+
+.track {
+  width: 200px;
+  margin: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  background-color: rgb(200, 200, 200, 0.5);
+}
+
+.track > button {
+  float: left;
+}
+
+.track > img {
+  float: left;
 }
 
 /* Debug */
