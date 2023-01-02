@@ -7,69 +7,74 @@ function App() {
   const api = useApi();
   const [playlistId, setPlaylistId] = useState();
 
-  const selectedPlaylist =
-    api.playlists !== undefined && playlistId !== undefined
-      ? api.playlists[playlistId]
-      : null;
-
   const deselectPlaylist = () => {
     setPlaylistId(undefined);
   };
 
-  // TODO: if token expires, delete it on refresh
-  // TODO: change playlistPage to remove the minimum info as props
+  const selectedPlaylist =
+    api.isLoggedIn && playlistId !== undefined
+      ? api.playlists[playlistId]
+      : null;
+
+  // TODO: change playlistPage to take in the minimum info as props
+  // TODO: create nav bar object
+  // TODO: handle >100 tracks or >20 playlists
+
+  // TODO: fix color background for track object
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Sortify </h1>
-      </header>
+      <div className="nav-bar">
+        {api.isLoggedIn ? <p>Hi, {api.name} </p> : <p></p>}
 
-      <div className="App-body">
-        <div className="nav-bar">
-          {api && api.name ? <p>Hi, {api.name} </p> : <p></p>}
+        {api.isLoggedIn ? (
+          <button onClick={api.logout}> Logout </button>
+        ) : (
+          <button onClick={api.login}> Login </button>
+        )}
 
-          {!api.isLoggedIn ? (
-            <button onClick={api.login}> Login </button>
-          ) : (
-            <button onClick={api.logout}> Logout </button>
-          )}
+        {api.isLoggedIn ? (
+          <div>
+            <button onClick={api.refreshPlaylists}> Refresh playlists</button>
+          </div>
+        ) : null}
 
-          {api.id ? (
-            <div>
-              <button onClick={api.refreshPlaylists}> Refresh playlists</button>
-            </div>
-          ) : null}
-
-          {selectedPlaylist ? (
+        {api.isLoggedIn ? (
+          selectedPlaylist ? (
             <button onClick={deselectPlaylist}>Deselect playlist</button>
           ) : (
             <button disabled>Deselect playlist</button>
-          )}
+          )
+        ) : null}
 
-          <div>
-            {api.id ? (
-              <button onClick={api.createPlaylist}>Create Playlist</button>
-            ) : null}
-            <input id="newPlaylistNameInput" type="text" size="20"></input>
-          </div>
-
-          {api.playlists ? (
-            <div>
-              {api.playlists.map((playlist, index) => (
-                <div key={index}>
-                  <button
-                    className="playlistTitles"
-                    key={index}
-                    onClick={() => setPlaylistId(index)}
-                  >
-                    {playlist.name}
-                  </button>
-                </div>
-              ))}
-            </div>
+        <div>
+          {api.isLoggedIn ? (
+            <button onClick={api.createPlaylist}>Create Playlist</button>
           ) : null}
+          <input id="newPlaylistNameInput" type="text" size="20"></input>
         </div>
+
+        {api.isLoggedIn && api.playlists ? (
+          <div>
+            {api.playlists.map((playlist, index) => (
+              <div key={index}>
+                <button
+                  className="playlistTitles"
+                  key={index}
+                  onClick={() => setPlaylistId(index)}
+                >
+                  {playlist.name}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="App-body">
+        <header className="App-header">
+          <h1>Sortify </h1>
+        </header>
 
         <div className="content">
           {selectedPlaylist ? (
