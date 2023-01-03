@@ -49,22 +49,44 @@ export function PlaylistPage(props) {
       ],
     });
   };
+  const addContainer = () => {
+    const container = document.createElement("div");
+    container.setAttribute("class", "container");
+    container.draggable = true;
 
-  /* Re-render on different playlist select */
+    // setup new container on creation
+    container.addEventListener("dragover", (e) => {
+      handleTrackDrag(e, container);
+    });
+
+    container.ondragstart = (e) => e.target.classList.add("dragging");
+    container.ondragend = (e) => e.target.classList.remove("dragging");
+
+    const page = document.querySelector(".superContainer");
+    page.appendChild(container);
+  };
+  const removeEmptyContainer = () => {
+    const containers = document.querySelectorAll(".container");
+    var removed = false;
+    containers.forEach((container) => {
+      if (!container.firstChild && !removed) {
+        container.remove();
+        removed = true;
+      }
+    });
+  };
+
+  /* Re-render on playlist select */
   useEffect(() => {
     setReady(false);
 
     getPlaylist(id)
       .then((result) => result.map((item) => item.track))
-      .then((result) => {
-        console.log("ARRAY OF PLAYLISTS:", result);
-        return result;
-      })
       .then((result) => setTracks(result))
       .then(() => setReady(true));
   }, [getPlaylist, id]);
 
-  /* Handling dragging */
+  /* Handling track dragging */
   const getDragAfterElement = (container, y) => {
     const draggableElements = [
       ...container.querySelectorAll(".track:not(.dragging)"),
@@ -84,20 +106,74 @@ export function PlaylistPage(props) {
     ).element;
   };
 
+  const handleTrackDrag = (e, container) => {
+    if (!document.querySelector(".container.dragging")) {
+      e.preventDefault();
+      const afterElement = getDragAfterElement(container, e.clientY);
+      const draggable = document.querySelector(".track.dragging");
+      if (afterElement == null) {
+        container.appendChild(draggable);
+      } else {
+        container.insertBefore(draggable, afterElement);
+      }
+    }
+  };
+
+  // on render, setup all containers
   useEffect(() => {
     const containers = document.querySelectorAll(".container");
     containers.forEach((container) => {
-      // console.log(container);
       container.addEventListener("dragover", (e) => {
-        // console.log(e);
-        e.preventDefault();
-        const afterElement = getDragAfterElement(container, e.clientY);
-        const draggable = document.querySelector(".dragging");
-        if (afterElement == null) {
-          container.appendChild(draggable);
+        handleTrackDrag(e, container);
+      });
+      container.ondragstart = (e) => e.target.classList.add("dragging");
+      container.ondragend = (e) => e.target.classList.remove("dragging");
+      container.draggable = true;
+    });
+  });
+
+  /* Handling container dragging */
+  const getContainerDragAfterElement = (superContainer, x) => {
+    const draggableElements = [
+      ...superContainer.querySelectorAll(".container:not(.dragging)"),
+    ];
+
+    return draggableElements.reduce(
+      (closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = x - box.left - box.width / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
         } else {
-          container.insertBefore(draggable, afterElement);
+          return closest;
         }
+      },
+      { offset: Number.NEGATIVE_INFINITY }
+    ).element;
+  };
+
+  const handleContainerDrag = (e, superContainer) => {
+    if (!document.querySelector(".track.dragging")) {
+      e.preventDefault();
+      const afterElement = getContainerDragAfterElement(
+        superContainer,
+        e.clientX
+      );
+      const draggable = document.querySelector(".container.dragging");
+      if (afterElement == null) {
+        superContainer.appendChild(draggable);
+      } else {
+        superContainer.insertBefore(draggable, afterElement);
+      }
+    }
+  };
+
+  // on render, setup all superContainers (only one)
+  useEffect(() => {
+    const superContainers = document.querySelectorAll(".superContainer");
+    superContainers.forEach((superContainer) => {
+      superContainer.addEventListener("dragover", (e) => {
+        handleContainerDrag(e, superContainer);
       });
     });
   });
@@ -107,10 +183,14 @@ export function PlaylistPage(props) {
       <h1>{title}</h1>
       <p>{displayName}</p>
       <button onClick={deletePlaylist}>Delete playlist</button>
-      <div className="container">
-        {tracks.map((track, index) => (
-          <Track track={track} key={index}></Track>
-        ))}
+      <button onClick={addContainer}>Add bucket</button>
+      <button onClick={removeEmptyContainer}>Remove empty bucket</button>
+      <div className="superContainer">
+        <div className="container">
+          {tracks.map((track, index) => (
+            <Track track={track} key={index}></Track>
+          ))}
+        </div>
       </div>
     </div>
   ) : (

@@ -20,7 +20,7 @@ function App() {
   // TODO: create nav bar object
   // TODO: handle >100 tracks or >20 playlists
 
-  // TODO: fix color background for track object
+  // TODO: Auto generate sentence playlists
 
   return (
     <div className="App">

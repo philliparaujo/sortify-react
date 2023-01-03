@@ -69,19 +69,30 @@ body {
   display: inline-block;
 }
 
+.superContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  background-color: orange;
+}
+
 .container {
   background-color: #333;
-  width: fit-content;
-  margin: auto;
-  padding: 1rem;
+  width: 227px;
+  margin: 6px;
+  padding: 20px;
+  height: fit-content;
+  /* min-height: 100px; */
 }
 
 .track {
-  width: 200px;
+  width: auto;
   margin: auto;
   white-space: nowrap;
   overflow: hidden;
   background-color: rgb(200, 200, 200, 0.5);
+  outline: 1px solid white;
+  text-align: left;
 }
 
 .track > button {
@@ -90,6 +101,12 @@ body {
 
 .track > img {
   float: left;
+}
+
+.track > p {
+  margin: 0px;
+  margin-left: 5px;
+  display: inline;
 }
 
 /* Debug */
