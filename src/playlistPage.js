@@ -4,7 +4,7 @@ import "react-confirm-alert/src/react-confirm-alert.css"; // confirmAlert CSS
 import { Track } from "./track";
 
 /* props = {playlist: ...,
-            getPlaylist: (from api),
+            getPlaylistTracks: (from api),
             refreshPlaylists: (from api),
             deselectPlaylist: (from setStates)} */
 export function PlaylistPage(props) {
@@ -20,7 +20,7 @@ export function PlaylistPage(props) {
   // const numTracks = props.playlist.tracks.total;
 
   const refreshPlaylists = props.refreshPlaylists;
-  const getPlaylist = props.getPlaylist;
+  const getPlaylistTracks = props.getPlaylistTracks;
   const deselectPlaylist = props.deselectPlaylist;
   const deletePlaylist = () => {
     const requestOptions = {
@@ -68,6 +68,7 @@ export function PlaylistPage(props) {
   const removeEmptyContainer = () => {
     const containers = document.querySelectorAll(".container");
     var removed = false;
+    if (containers.length === 1) return;
     containers.forEach((container) => {
       if (!container.firstChild && !removed) {
         container.remove();
@@ -80,11 +81,11 @@ export function PlaylistPage(props) {
   useEffect(() => {
     setReady(false);
 
-    getPlaylist(id)
+    getPlaylistTracks(id)
       .then((result) => result.map((item) => item.track))
       .then((result) => setTracks(result))
       .then(() => setReady(true));
-  }, [getPlaylist, id]);
+  }, [getPlaylistTracks, id]);
 
   /* Handling track dragging */
   const getDragAfterElement = (container, y) => {

@@ -4,6 +4,8 @@ import "./App.css";
 export function Track(props) {
   const divRef = React.useRef();
   const imgRef = React.useRef();
+  const audioRef = React.useRef();
+  const playRef = React.useRef();
 
   const id = props.track.id;
   const image = props.track.album.images[0];
@@ -11,13 +13,18 @@ export function Track(props) {
   // const artists = props.track.artists;
   // const durationMs = props.track.duration_ms;
   // const explicit = props.track.explicit;
-  // const previewUrl = props.track.preview_url;
+  const previewUrl = props.track.preview_url;
 
   let imageUrl;
   if (image) {
     imageUrl = image.url;
   } else {
     imageUrl = null;
+  }
+
+  var playing = React.useRef(undefined);
+  if (playing.current === undefined) {
+    playing.current = false;
   }
 
   /* Colors track on load */
@@ -79,7 +86,31 @@ export function Track(props) {
     img.onload = (img) => {
       setTrackStyle(img);
     };
+
+    const audio = audioRef.current;
+    if (!audio.src) {
+      playRef.current.value = "BEGONE";
+    }
+    audio.addEventListener(
+      "canplaythrough",
+      () => {
+        audio.playbackRate = 1.75;
+
+        playRef.current.addEventListener("click", togglePlay);
+      },
+      false
+    );
   }, [id]);
+
+  const togglePlay = () => {
+    if (!playing.current) {
+      audioRef.current.play();
+      playing.current = true;
+    } else {
+      audioRef.current.pause();
+      playing.current = false;
+    }
+  };
 
   return (
     <div
@@ -89,7 +120,10 @@ export function Track(props) {
       onDragStart={(e) => e.target.classList.add("dragging")}
       onDragEnd={(e) => e.target.classList.remove("dragging")}
     >
-      <button draggable="false">play</button>
+      <button ref={playRef} draggable="false">
+        Play
+      </button>
+      <audio ref={audioRef} src={previewUrl} type="audio/mp3"></audio>
       <img
         ref={imgRef}
         src={imageUrl}

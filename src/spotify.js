@@ -52,25 +52,27 @@ const login = () => {
  */
 const baseURI = "https://api.spotify.com/v1";
 
-const genericGet = (request, token) => {
-  return fetch(`${baseURI}/${request}`, {
-    method: "GET",
+const baseHeaders = (requestType, token) => {
+  return {
+    method: requestType,
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-  }).then((result) => result.json());
+  };
+};
+
+const genericGet = (request, token) => {
+  return fetch(`${baseURI}/${request}`, baseHeaders("GET", token)).then(
+    (result) => result.json()
+  );
 };
 
 const genericPost = (request, token, data) => {
-  return fetch(`${baseURI}/${request}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: data,
-  }).then((result) => result.json());
+  return fetch(
+    `${baseURI}/${request}`,
+    Object.assign(baseHeaders("POST", token), { body: data })
+  ).then((result) => result.json());
 };
 
 /* string (within a Promise) */
@@ -93,9 +95,38 @@ const getEmail = (token) => {
 
 /* array of all playlists (within a Promise) */
 const getPlaylists = (token, user_id) => {
-  return genericGet(`users/${user_id}/playlists`, token).then(
-    (result) => result.items
-  );
+  const getRestPlaylists = (href, token, playlists) => {
+    return fetch(href, baseHeaders("GET", token))
+      .then((result) => result.json())
+      .then((result) => {
+        // if last page
+        if (!result.next) {
+          return result.items;
+        }
+
+        // combine current page with last page
+        return fetch(result.next, baseHeaders("GET", token))
+          .then((result2) => result2.json())
+          .then((result2) => result2.href)
+          .then((result2) => getRestPlaylists(result2, token, playlists))
+          .then((finishedResult2) => {
+            playlists.push(finishedResult2);
+            return result.items;
+          });
+      });
+  };
+
+  var firstPlaylists = [];
+  var restPlaylists = [];
+
+  return genericGet(`users/${user_id}/playlists`, token)
+    .then((result) => {
+      firstPlaylists.push(result.items);
+      return getRestPlaylists(result.href, token, restPlaylists);
+    })
+    .then(() => {
+      return firstPlaylists.concat(restPlaylists.reverse()).flat();
+    });
 };
 
 /* Information passed to App.js, re-rendered on update
@@ -157,11 +188,46 @@ export function useApi() {
     }
   };
 
-  /* JSON of specific playlist (within a Promise) */
-  const getPlaylist = (playlist_id) => {
+  /* array of track objects from a playlist (within a Promise) */
+  const getPlaylistTracks = (playlist_id) => {
+    const getRestTracks = (href, token, tracks) => {
+      return fetch(href, baseHeaders("GET", token))
+        .then((result) => result.json())
+        .then((result) => {
+          // if last page
+          if (!result.next) {
+            // console.log(result);
+            return result.items;
+          }
+
+          // combine current page with last page
+          return fetch(result.next, baseHeaders("GET", token))
+            .then((result2) => result2.json())
+            .then((result2) => result2.href)
+            .then((result2) => getRestTracks(result2, token, tracks))
+            .then((finishedResult2) => {
+              tracks.push(finishedResult2);
+              return result.items;
+            });
+        });
+    };
+
+    var firstTracks = [];
+    var restTracks = [];
+
     return genericGet(`playlists/${playlist_id}`, token)
       .then((result) => result.tracks)
-      .then((result) => result.items);
+      .then((result) => {
+        firstTracks.push(result.items);
+        return getRestTracks(result.href, token, restTracks);
+      })
+      .then(() => {
+        return firstTracks.concat(restTracks.reverse()).flat();
+      });
+
+    // return genericGet(`playlists/${playlist_id}`, token).then(
+    //   (result) => result.tracks
+    // );
   };
 
   /* post public playlist request w/o description (within a Promise) */
@@ -195,7 +261,7 @@ export function useApi() {
         loginExpired: id === undefined,
         logout: () => setToken(undefined),
         refreshPlaylists: refreshPlaylists,
-        getPlaylist: getPlaylist,
+        getPlaylistTracks: getPlaylistTracks,
         createPlaylist: createPlaylist,
       }
     : {
