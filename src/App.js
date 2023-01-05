@@ -1,5 +1,5 @@
 import "./App.css";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useApi } from "./spotify.js";
 import { PlaylistPage } from "./playlistPage";
 
@@ -18,57 +18,64 @@ function App() {
 
   // TODO: change playlistPage to take in the minimum info as props
   // TODO: create nav bar object
-  // TODO: handle >100 tracks or >20 playlists
+  // TODO: fix play buttons (values, stopping when other pressed)
+  // TODO: fix appPadding for content scrolling
 
   // TODO: Auto generate sentence playlists
 
   return (
     <div className="App">
+      <div className="behind-nav-bar"></div>
+
       <div className="nav-bar">
-        {api.isLoggedIn ? <p>Hi, {api.name} </p> : <p></p>}
+        <header className="nav-header">
+          {api.isLoggedIn ? <p>Hi, {api.name} </p> : <p></p>}
 
-        {api.isLoggedIn ? (
-          <button onClick={api.logout}> Logout </button>
-        ) : (
-          <button onClick={api.login}> Login </button>
-        )}
-
-        {api.isLoggedIn ? (
-          <div>
-            <button onClick={api.refreshPlaylists}> Refresh playlists</button>
-          </div>
-        ) : null}
-
-        {api.isLoggedIn ? (
-          selectedPlaylist ? (
-            <button onClick={deselectPlaylist}>Deselect playlist</button>
-          ) : (
-            <button disabled>Deselect playlist</button>
-          )
-        ) : null}
-
-        <div>
           {api.isLoggedIn ? (
-            <button onClick={api.createPlaylist}>Create Playlist</button>
-          ) : null}
-          <input id="newPlaylistNameInput" type="text" size="20"></input>
-        </div>
+            <button onClick={api.logout}> Logout </button>
+          ) : (
+            <button onClick={api.login}> Login </button>
+          )}
 
-        {api.isLoggedIn && api.playlists ? (
+          {api.isLoggedIn ? (
+            <div>
+              <button onClick={api.refreshPlaylists}> Refresh playlists</button>
+            </div>
+          ) : null}
+
+          {api.isLoggedIn ? (
+            <div>
+              {selectedPlaylist ? (
+                <button onClick={deselectPlaylist}>Deselect playlist</button>
+              ) : (
+                <button disabled>Deselect playlist</button>
+              )}
+            </div>
+          ) : null}
+
           <div>
-            {api.playlists.map((playlist, index) => (
-              <div key={index}>
-                <button
-                  className="playlistTitles"
-                  key={index}
-                  onClick={() => setPlaylistId(index)}
-                >
-                  {playlist.name}
-                </button>
-              </div>
-            ))}
+            {api.isLoggedIn ? (
+              <button onClick={api.createPlaylist}>Create Playlist</button>
+            ) : null}
+            <input id="newPlaylistNameInput" type="text" size="20"></input>
           </div>
-        ) : null}
+        </header>
+
+        <div className="allPlaylists">
+          {api.isLoggedIn && api.playlists
+            ? api.playlists.map((playlist, index) => (
+                <div key={index}>
+                  <button
+                    className="playlistButtons"
+                    key={index}
+                    onClick={() => setPlaylistId(index)}
+                  >
+                    {playlist.name}
+                  </button>
+                </div>
+              ))
+            : null}
+        </div>
       </div>
 
       <div className="App-body">
@@ -81,7 +88,7 @@ function App() {
             <PlaylistPage
               playlist={selectedPlaylist}
               refreshPlaylists={api.refreshPlaylists}
-              getPlaylist={api.getPlaylist}
+              getPlaylistTracks={api.getPlaylistTracks}
               deselectPlaylist={deselectPlaylist}
             ></PlaylistPage>
           ) : null}

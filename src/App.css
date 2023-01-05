@@ -6,7 +6,12 @@ body {
 }
 
 #root {
-  --headerHeight: 80px;
+  --headerHeight: 90px;
+  --navHeaderHeight: 121.4px;
+  --navBarWidth: 300px;
+  --appPadding: 0px;
+
+  --contentBackground: pink;
 }
 
 .App {
@@ -14,23 +19,48 @@ body {
   display: flex;
   flex-direction: row;
   height: 100%;
+  padding: var(--appPadding);
 }
 
 /* Nav bar */
-.nav-bar {
-  /* position: fixed;
-  top: 0;
-  bottom: 0; */
-  background-color: aquamarine;
-  width: 320px;
+
+/* required to center content since real nav bar has fixed position */
+.behind-nav-bar {
+  width: var(--navBarWidth);
 }
 
-.playlistTitles {
+.nav-header {
+  background-color: gray;
+  height: var(--navHeaderHeight);
+}
+
+.nav-header > p {
+  margin: 0;
+}
+
+.nav-bar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  background-color: aquamarine;
+  width: var(--navBarWidth);
+  height: calc(100vh - 2 * var(--appPadding));
+  margin-top: var(--appPadding);
+  /* overflow: hidden; */
+}
+
+.allPlaylists {
+  height: calc(100% - var(--navHeaderHeight) - 0px);
+  overflow: scroll;
+  overflow-x: hidden;
+}
+
+.playlistButtons {
   border: 0;
   background-color: transparent;
   color: blue;
 }
-.playlistTitles:hover {
+.playlistButtons:hover {
   color: red;
 }
 
@@ -39,7 +69,6 @@ body {
   background-color: yellow;
   display: flex;
   flex-direction: column;
-  min-height: calc(100% - var(--headerHeight));
   flex: 1;
 }
 
@@ -51,7 +80,8 @@ body {
 
   align-items: center;
   justify-content: center;
-  height: var(--headerHeight);
+  min-height: var(--headerHeight);
+  overflow: hidden;
 }
 
 .App-header P {
@@ -64,16 +94,17 @@ body {
 
 /* Playlist Page */
 .content {
-  background-color: pink;
+  background-color: var(--contentBackground);
   width: 100%;
   display: inline-block;
+  min-height: calc(100% - var(--headerHeight));
 }
 
 .superContainer {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  background-color: orange;
+  background-color: var(--contentBackground);
 }
 
 .container {
