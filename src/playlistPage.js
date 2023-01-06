@@ -1,9 +1,7 @@
-import React, { useState, useEffect, createContext } from "react";
+import React, { useState, useEffect } from "react";
 import { confirmAlert } from "react-confirm-alert"; // confirmAlert JS
 import "react-confirm-alert/src/react-confirm-alert.css"; // confirmAlert CSS
 import { Track } from "./track";
-
-export const Playing = createContext();
 
 /* props = {playlist: ...,
             getPlaylistTracks: (from api),
@@ -12,7 +10,7 @@ export const Playing = createContext();
 export function PlaylistPage(props) {
   const [tracks, setTracks] = useState([]);
   const [ready, setReady] = useState(false);
-  const [playing, setPlaying] = useState(undefined);
+  const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
 
   const id = props.playlist.id;
   const title = props.playlist.name;
@@ -182,6 +180,20 @@ export function PlaylistPage(props) {
     });
   });
 
+  /* Handling memory of playing songs */
+  const handlePlay = (pauseMe) => {
+    setPauseCurrentTrack((currentPauseMe) => {
+      if (currentPauseMe) {
+        currentPauseMe();
+      }
+      return pauseMe;
+    });
+  };
+
+  const handlePause = () => {
+    setPauseCurrentTrack(undefined);
+  };
+
   return ready ? (
     <div>
       <h1>{title}</h1>
@@ -191,11 +203,16 @@ export function PlaylistPage(props) {
       <button onClick={removeEmptyContainer}>Remove empty bucket</button>
       <div className="superContainer">
         <div className="container">
-          {tracks.map((track, index) => (
-            <Playing.Provider value={[{ playing, setPlaying }]}>
-              <Track track={track} key={index}></Track>
-            </Playing.Provider>
-          ))}
+          {tracks.map((track, index) => {
+            return (
+              <Track
+                track={track}
+                key={index}
+                onPlay={(pauseMe) => handlePlay(pauseMe)}
+                onPause={handlePause}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

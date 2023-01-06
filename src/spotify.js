@@ -162,6 +162,7 @@ export function useApi() {
         }
       });
       getID(token).then((result) => setID(result));
+
       getEmail(token).then((result) => setEmail(result));
     } else {
       window.localStorage.removeItem("token");
@@ -170,11 +171,15 @@ export function useApi() {
       setName(undefined);
       setID(undefined);
       setEmail(undefined);
+      setPlaylists(undefined);
     }
   }, [token]);
 
-  /* on ID update, updates all related variables */
-  useEffect(() => refreshPlaylists(), [id]);
+  useEffect(() => {
+    if (id) {
+      getPlaylists(token, id).then((result) => setPlaylists(result));
+    }
+  }, [id, token]);
 
   /* Methods to pass to return object
    */
@@ -196,7 +201,6 @@ export function useApi() {
         .then((result) => {
           // if last page
           if (!result.next) {
-            // console.log(result);
             return result.items;
           }
 
