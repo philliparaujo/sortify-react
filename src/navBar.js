@@ -18,6 +18,9 @@ export function NavBar(props) {
   }
   const refreshPlaylists = props.refreshPlaylists;
   const createPlaylist = props.createPlaylist;
+  const addSongToPlaylist = () => {
+    props.addSongToPlaylist(selectedPlaylist.id);
+  };
 
   return (
     <div>
@@ -38,6 +41,10 @@ export function NavBar(props) {
               <button onClick={createPlaylist}>Create Playlist</button>
               <input id="newPlaylistNameInput" type="text" size="20"></input>
             </div>
+            <div>
+              <button onClick={addSongToPlaylist}>Add Song</button>
+              <input id="songSearchInput" type="text" size="20"></input>
+            </div>
           </div>
         ) : (
           <div className="nav-header">
@@ -53,7 +60,6 @@ export function NavBar(props) {
                     className="playlistButtons"
                     key={index}
                     onClick={() => {
-                      console.log("click");
                       setPlaylistId(index);
                     }}
                   >

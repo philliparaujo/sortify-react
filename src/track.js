@@ -92,38 +92,47 @@ export function Track(props) {
     audio.addEventListener(
       "canplaythrough",
       () => {
-        audio.playbackRate = 1.75;
+        audio.playbackRate = 2;
       },
       false
     );
+
+    pauseMe();
   }, [id]);
 
   /* Handles playing/pausing audio */
+
+  const pauseMe = () => {
+    audioRef.current.pause();
+    setPlaying(undefined);
+    setButtonText("Play");
+
+    if (props.onPause) {
+      props.onPause();
+    }
+  };
+
+  const playMe = () => {
+    var playPromise = audioRef.current.play();
+    playPromise
+      .then(() => {
+        setPlaying(id);
+        setButtonText("Pause");
+      })
+      .catch((error) => console.log(error));
+
+    if (props.onPlay) {
+      props.onPlay(() => {
+        pauseMe();
+      });
+    }
+  };
+
   const togglePlay = () => {
-    const pauseMe = () =>
-      setTimeout(() => {
-        audioRef.current.pause();
-        setPlaying(undefined);
-        setButtonText("Play");
-      }, 0);
-
-    /* IF NOT PLAYING */
     if (playing === undefined || audioRef.current.paused) {
-      audioRef.current.play();
-      setPlaying(id);
-      setButtonText("Pause");
-
-      if (props.onPlay) {
-        props.onPlay(() => {
-          pauseMe();
-        });
-      }
+      playMe();
     } else {
-      /* IF PLAYING */
       pauseMe();
-      if (props.onPause) {
-        props.onPause();
-      }
     }
   };
 
@@ -143,7 +152,7 @@ export function Track(props) {
         ref={audioRef}
         src={previewUrl}
         type="audio/mp3"
-        onEnded={togglePlay}
+        onEnded={pauseMe}
       ></audio>
       <img
         ref={imgRef}

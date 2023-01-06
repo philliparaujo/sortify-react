@@ -37,6 +37,7 @@ export function App() {
           logout={api.logout}
           refreshPlaylists={api.refreshPlaylists}
           createPlaylist={api.createPlaylist}
+          addSongToPlaylist={api.addSongToPlaylist}
         ></NavBar>
       </PlaylistId.Provider>
 
