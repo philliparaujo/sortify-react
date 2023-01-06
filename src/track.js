@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
-import { Playing } from "./playlistPage.js";
 
 export function Track(props) {
   const [buttonText, setButtonText] = useState("Play");
-  const [{ playing, setPlaying }] = useContext(Playing);
+  const [playing, setPlaying] = useState(false);
 
   const divRef = React.useRef();
   const imgRef = React.useRef();
@@ -14,10 +13,10 @@ export function Track(props) {
   const id = props.track.id;
   const image = props.track.album.images[0];
   const name = props.track.name;
+  const previewUrl = props.track.preview_url;
   // const artists = props.track.artists;
   // const durationMs = props.track.duration_ms;
   // const explicit = props.track.explicit;
-  const previewUrl = props.track.preview_url;
 
   let imageUrl;
   if (image) {
@@ -26,9 +25,7 @@ export function Track(props) {
     imageUrl = null;
   }
 
-  // var playing = React.useRef(undefined);
-
-  /* Colors track on load */
+  /* Colors tracks, sets up play button and audio on load */
   useEffect(() => {
     const getAverageRGB = (img) => {
       img.setAttribute("crossOrigin", "");
@@ -96,42 +93,39 @@ export function Track(props) {
       "canplaythrough",
       () => {
         audio.playbackRate = 1.75;
-
-        // playRef.current.addEventListener("click", togglePlay);
       },
       false
     );
   }, [id]);
 
+  /* Handles playing/pausing audio */
   const togglePlay = () => {
-    console.log("BEFORE", playing);
+    const pauseMe = () =>
+      setTimeout(() => {
+        audioRef.current.pause();
+        setPlaying(undefined);
+        setButtonText("Play");
+      }, 0);
 
+    /* IF NOT PLAYING */
     if (playing === undefined || audioRef.current.paused) {
-      /* IF NOT PLAYING */
-
       audioRef.current.play();
-      // playing.current = true;
       setPlaying(id);
       setButtonText("Pause");
 
-      if (playing !== undefined) {
-        // console.log("CURRENT", playing);
-        const otherPlayingTrack = document.getElementById(playing);
-        // otherPlayingTrack.togglePlay();
+      if (props.onPlay) {
+        props.onPlay(() => {
+          pauseMe();
+        });
       }
     } else {
       /* IF PLAYING */
-
-      audioRef.current.pause();
-      setPlaying(undefined);
-      // playing.current = false;
-      setButtonText("Play");
+      pauseMe();
+      if (props.onPause) {
+        props.onPause();
+      }
     }
   };
-
-  // useEffect(() => {
-  //   togglePlay();
-  // }, [playing]);
 
   return (
     <div
@@ -158,7 +152,6 @@ export function Track(props) {
         width="35"
         height="35"
         draggable="false"
-        // hidden
       ></img>
       <p id="title" draggable="false">
         {name}

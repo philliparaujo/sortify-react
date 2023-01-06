@@ -20,7 +20,6 @@ export function App() {
       : null;
 
   // TODO: change playlistPage to take in the minimum info as props
-  // TODO: fix play buttons (stopping when other pressed)
   // TODO: fix appPadding for content scrolling
 
   // TODO: Auto generate sentence playlists
