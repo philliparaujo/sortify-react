@@ -41,9 +41,8 @@ export function PlaylistPage(props) {
             return fetch(
               `https://api.spotify.com/v1/` + `playlists/${id}/followers`,
               requestOptions
-            )
-              .then(refreshPlaylists)
-              .then(deselectPlaylist);
+            ).then(refreshPlaylists);
+            // .then(deselectPlaylist);
           },
         },
         { label: "No" },

@@ -175,6 +175,7 @@ export function useApi() {
     }
   }, [token]);
 
+  /* On reload, set playlists */
   useEffect(() => {
     if (id) {
       getPlaylists(token, id).then((result) => setPlaylists(result));
@@ -228,13 +229,9 @@ export function useApi() {
       .then(() => {
         return firstTracks.concat(restTracks.reverse()).flat();
       });
-
-    // return genericGet(`playlists/${playlist_id}`, token).then(
-    //   (result) => result.tracks
-    // );
   };
 
-  /* post public playlist request w/o description (within a Promise) */
+  /* post public playlist request w/o description */
   const createPlaylist = () => {
     if (!authInfo.SCOPES.includes("playlist-modify-public")) {
       throw new Error("No permission to modify public playlists!");
@@ -249,9 +246,41 @@ export function useApi() {
       name: title,
       public: true,
     });
-    return genericPost(`users/${id}/playlists`, token, data)
+    genericPost(`users/${id}/playlists`, token, data)
       .then(refreshPlaylists)
       .then((document.getElementById("newPlaylistNameInput").value = ""));
+  };
+
+  /* one-element array of song URI matching search bar (within a Promise) */
+  const getSongUri = () => {
+    const songTitle = document.getElementById("songSearchInput").value;
+    if (songTitle === "") {
+      throw new Error("Song search title can't be empty!");
+    }
+
+    return genericGet(
+      `search?query=${encodeURIComponent(`"${songTitle}"`)}&type=track`,
+      token
+    )
+      .then((result) => result.tracks)
+      .then((result) => result.items)
+      .then((result) => result.map((item) => item.uri))
+      .then((result) => result.slice(0, 1))
+      .then((result) => {
+        document.getElementById("songSearchInput").value = "";
+        return result;
+      });
+  };
+
+  /* add song matching search bar to playlist */
+  const addSongToPlaylist = (playlist_id) => {
+    getSongUri().then((result) => {
+      const numSongs = getPlaylistTracks(playlist_id).length;
+      const data = JSON.stringify({ uris: result, position: numSongs });
+      genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
+        refreshPlaylists
+      );
+    });
   };
 
   /* passes information to App.js */
@@ -267,6 +296,7 @@ export function useApi() {
         refreshPlaylists: refreshPlaylists,
         getPlaylistTracks: getPlaylistTracks,
         createPlaylist: createPlaylist,
+        addSongToPlaylist: addSongToPlaylist,
       }
     : {
         isLoggedIn: false,
