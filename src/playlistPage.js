@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext } from "react";
 import { confirmAlert } from "react-confirm-alert"; // confirmAlert JS
 import "react-confirm-alert/src/react-confirm-alert.css"; // confirmAlert CSS
 import { Track } from "./track";
+
+export const Playing = createContext();
 
 /* props = {playlist: ...,
             getPlaylistTracks: (from api),
@@ -10,6 +12,7 @@ import { Track } from "./track";
 export function PlaylistPage(props) {
   const [tracks, setTracks] = useState([]);
   const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(undefined);
 
   const id = props.playlist.id;
   const title = props.playlist.name;
@@ -189,7 +192,9 @@ export function PlaylistPage(props) {
       <div className="superContainer">
         <div className="container">
           {tracks.map((track, index) => (
-            <Track track={track} key={index}></Track>
+            <Playing.Provider value={[{ playing, setPlaying }]}>
+              <Track track={track} key={index}></Track>
+            </Playing.Provider>
           ))}
         </div>
       </div>

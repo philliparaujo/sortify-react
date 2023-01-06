@@ -7,7 +7,7 @@ body {
 
 #root {
   --headerHeight: 90px;
-  --navHeaderHeight: 121.4px;
+  --navHeaderHeight: 111.4px;
   --navBarWidth: 300px;
   --appPadding: 0px;
 
@@ -29,15 +29,6 @@ body {
   width: var(--navBarWidth);
 }
 
-.nav-header {
-  background-color: gray;
-  height: var(--navHeaderHeight);
-}
-
-.nav-header > p {
-  margin: 0;
-}
-
 .nav-bar {
   position: fixed;
   top: 0;
@@ -47,6 +38,20 @@ body {
   height: calc(100vh - 2 * var(--appPadding));
   margin-top: var(--appPadding);
   /* overflow: hidden; */
+}
+
+.nav-header {
+  background-color: gray;
+  height: var(--navHeaderHeight);
+}
+
+.nav-header > p {
+  margin: 0;
+}
+
+.nav-header > button {
+  display: block;
+  margin: auto;
 }
 
 .allPlaylists {
@@ -142,5 +147,5 @@ body {
 
 /* Debug */
 div {
-  outline: 2px solid red;
+  /* outline: 2px solid red; */
 }

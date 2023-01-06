@@ -1,7 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import "./App.css";
+import { Playing } from "./playlistPage.js";
 
 export function Track(props) {
+  const [buttonText, setButtonText] = useState("Play");
+  const [{ playing, setPlaying }] = useContext(Playing);
+
   const divRef = React.useRef();
   const imgRef = React.useRef();
   const audioRef = React.useRef();
@@ -22,10 +26,7 @@ export function Track(props) {
     imageUrl = null;
   }
 
-  var playing = React.useRef(undefined);
-  if (playing.current === undefined) {
-    playing.current = false;
-  }
+  // var playing = React.useRef(undefined);
 
   /* Colors track on load */
   useEffect(() => {
@@ -89,41 +90,67 @@ export function Track(props) {
 
     const audio = audioRef.current;
     if (!audio.src) {
-      playRef.current.value = "BEGONE";
+      playRef.current.disabled = true;
     }
     audio.addEventListener(
       "canplaythrough",
       () => {
         audio.playbackRate = 1.75;
 
-        playRef.current.addEventListener("click", togglePlay);
+        // playRef.current.addEventListener("click", togglePlay);
       },
       false
     );
   }, [id]);
 
   const togglePlay = () => {
-    if (!playing.current) {
+    console.log("BEFORE", playing);
+
+    if (playing === undefined || audioRef.current.paused) {
+      /* IF NOT PLAYING */
+
       audioRef.current.play();
-      playing.current = true;
+      // playing.current = true;
+      setPlaying(id);
+      setButtonText("Pause");
+
+      if (playing !== undefined) {
+        // console.log("CURRENT", playing);
+        const otherPlayingTrack = document.getElementById(playing);
+        // otherPlayingTrack.togglePlay();
+      }
     } else {
+      /* IF PLAYING */
+
       audioRef.current.pause();
-      playing.current = false;
+      setPlaying(undefined);
+      // playing.current = false;
+      setButtonText("Play");
     }
   };
 
+  // useEffect(() => {
+  //   togglePlay();
+  // }, [playing]);
+
   return (
     <div
+      id={id}
       ref={divRef}
       className="track"
       draggable="true"
       onDragStart={(e) => e.target.classList.add("dragging")}
       onDragEnd={(e) => e.target.classList.remove("dragging")}
     >
-      <button ref={playRef} draggable="false">
-        Play
+      <button ref={playRef} draggable="false" onClick={togglePlay}>
+        {buttonText}
       </button>
-      <audio ref={audioRef} src={previewUrl} type="audio/mp3"></audio>
+      <audio
+        ref={audioRef}
+        src={previewUrl}
+        type="audio/mp3"
+        onEnded={togglePlay}
+      ></audio>
       <img
         ref={imgRef}
         src={imageUrl}
