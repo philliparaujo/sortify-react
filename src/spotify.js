@@ -129,6 +129,30 @@ const getPlaylists = (token, user_id) => {
     });
 };
 
+/* 20-element array of song ids matching search bar (within a Promise) */
+const searchByTitle = (songTitle, token) => {
+  if (songTitle === "") {
+    throw new Error("Song search title can't be empty!");
+  }
+
+  // return (
+  //   genericGet(
+  //     `search?query=${encodeURIComponent(`${songTitle}`)}&type=track`,
+  //     token
+  //   )
+  return genericGet(
+    `search?query=${encodeURIComponent(
+      `"${songTitle}"`
+    )}&type=track&album=${encodeURIComponent(`"${songTitle}"`)}`,
+    token
+  )
+    .then((result) => result.tracks)
+    .then((result) => result.items)
+    .then((result) => result.map((item) => item.id));
+  // .then((result) => result.map((item) => item.uri))
+  // .then((result) => result.slice(0, 1))
+};
+
 /* Information passed to App.js, re-rendered on update
  */
 export function useApi() {
@@ -194,25 +218,25 @@ export function useApi() {
     }
   };
 
-  /* array of track objects from a playlist (within a Promise) */
-  const getPlaylistTracks = (playlist_id) => {
-    const getRestTracks = (href, token, tracks) => {
+  /* array of track ids from a playlist (within a Promise) */
+  const getPlaylistTrackIds = (playlist_id) => {
+    const getRestTrackIds = (href, token, tracks) => {
       return fetch(href, baseHeaders("GET", token))
         .then((result) => result.json())
         .then((result) => {
           // if last page
           if (!result.next) {
-            return result.items;
+            return result.items.map((item) => item.track.id);
           }
 
           // combine current page with last page
           return fetch(result.next, baseHeaders("GET", token))
             .then((result2) => result2.json())
             .then((result2) => result2.href)
-            .then((result2) => getRestTracks(result2, token, tracks))
+            .then((result2) => getRestTrackIds(result2, token, tracks))
             .then((finishedResult2) => {
               tracks.push(finishedResult2);
-              return result.items;
+              return result.items.map((item) => item.track.id);
             });
         });
     };
@@ -223,8 +247,8 @@ export function useApi() {
     return genericGet(`playlists/${playlist_id}`, token)
       .then((result) => result.tracks)
       .then((result) => {
-        firstTracks.push(result.items);
-        return getRestTracks(result.href, token, restTracks);
+        firstTracks.push(result.items.map((item) => item.track.id));
+        return getRestTrackIds(result.href, token, restTracks);
       })
       .then(() => {
         return firstTracks.concat(restTracks.reverse()).flat();
@@ -232,55 +256,48 @@ export function useApi() {
   };
 
   /* post public playlist request w/o description */
-  const createPlaylist = () => {
+  const createPlaylist = (title) => {
     if (!authInfo.SCOPES.includes("playlist-modify-public")) {
       throw new Error("No permission to modify public playlists!");
     }
 
-    const title = document.getElementById("newPlaylistNameInput").value;
     if (title === "") {
       throw new Error("Title can't be empty!");
     }
+
+    const titleWords = title.split(" ");
+    console.log(titleWords);
 
     const data = JSON.stringify({
       name: title,
       public: true,
     });
-    genericPost(`users/${id}/playlists`, token, data)
-      .then(refreshPlaylists)
-      .then((document.getElementById("newPlaylistNameInput").value = ""));
+
+    genericPost(`users/${id}/playlists`, token, data).then((result) => {
+      refreshPlaylists();
+      return result;
+    });
   };
 
-  /* one-element array of song URI matching search bar (within a Promise) */
-  const getSongUri = () => {
-    const songTitle = document.getElementById("songSearchInput").value;
-    if (songTitle === "") {
-      throw new Error("Song search title can't be empty!");
-    }
-
-    return genericGet(
-      `search?query=${encodeURIComponent(`"${songTitle}"`)}&type=track`,
-      token
-    )
-      .then((result) => result.tracks)
-      .then((result) => result.items)
-      .then((result) => result.map((item) => item.uri))
-      .then((result) => result.slice(0, 1))
+  /* add song matching search bar to playlist (within a Promise)*/
+  const addSongToPlaylist = (playlist_id, title) => {
+    searchByTitle(title, token)
+      .then((result) => getTrackById(result[0]))
       .then((result) => {
-        document.getElementById("songSearchInput").value = "";
-        return result;
+        console.log(result);
+        const numSongs = getPlaylistTrackIds(playlist_id).length;
+        const data = JSON.stringify({
+          uris: [result.uri],
+          position: numSongs,
+        });
+        return genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
+          refreshPlaylists
+        );
       });
   };
 
-  /* add song matching search bar to playlist */
-  const addSongToPlaylist = (playlist_id) => {
-    getSongUri().then((result) => {
-      const numSongs = getPlaylistTracks(playlist_id).length;
-      const data = JSON.stringify({ uris: result, position: numSongs });
-      genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
-        refreshPlaylists
-      );
-    });
+  const getTrackById = (song_id) => {
+    return genericGet(`tracks/${song_id}`, token);
   };
 
   /* passes information to App.js */
@@ -294,9 +311,10 @@ export function useApi() {
         loginExpired: id === undefined,
         logout: () => setToken(undefined),
         refreshPlaylists: refreshPlaylists,
-        getPlaylistTracks: getPlaylistTracks,
+        getPlaylistTrackIds: getPlaylistTrackIds,
         createPlaylist: createPlaylist,
         addSongToPlaylist: addSongToPlaylist,
+        getTrackById: getTrackById,
       }
     : {
         isLoggedIn: false,
