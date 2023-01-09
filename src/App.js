@@ -21,12 +21,15 @@ export function App() {
 
   // TODO: change playlistPage to take in the minimum info as props
   // TODO: fix appPadding for content scrolling
+  // TODO: change URIComponent to URL object & query params in spotify.js searchByTitle
+  // TODO: decouple everything
+  // TODO: turn props into individual parameters
 
   // TODO: Auto generate sentence playlists
 
   return (
     <div className="App">
-      <PlaylistId.Provider value={[{ playlistId, setPlaylistId }]}>
+      <PlaylistId.Provider value={{ playlistId, setPlaylistId }}>
         <NavBar
           isLoggedIn={api.isLoggedIn}
           name={api.name}
@@ -51,8 +54,9 @@ export function App() {
             <PlaylistPage
               playlist={selectedPlaylist}
               refreshPlaylists={api.refreshPlaylists}
-              getPlaylistTracks={api.getPlaylistTracks}
+              getPlaylistTrackIds={api.getPlaylistTrackIds}
               deselectPlaylist={deselectPlaylist}
+              getTrackById={api.getTrackById}
             ></PlaylistPage>
           ) : null}
         </div>

@@ -105,20 +105,21 @@ body {
   min-height: calc(100% - var(--headerHeight));
 }
 
-.superContainer {
+.superBucket {
   display: flex;
   flex-direction: row;
   justify-content: center;
   background-color: var(--contentBackground);
 }
 
-.container {
+.bucket {
   background-color: #333;
   width: 227px;
   margin: 6px;
   padding: 20px;
   height: fit-content;
   /* min-height: 100px; */
+  color: white;
 }
 
 .track {

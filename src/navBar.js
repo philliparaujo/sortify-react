@@ -1,25 +1,31 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { PlaylistId } from "./App.js";
 
-export function NavBar(props) {
-  const [{ playlistId, setPlaylistId }] = useContext(PlaylistId);
+export function NavBar({
+  isLoggedIn,
+  name,
+  playlists,
+  selectedPlaylist,
+  deselectPlaylist,
+  login,
+  logout,
+  refreshPlaylists,
+  createPlaylist,
+  addSongToPlaylist,
+}) {
+  const { setPlaylistId } = useContext(PlaylistId);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [newSongInput, setNewSongInput] = useState("");
 
-  const isLoggedIn = props.isLoggedIn;
-  const name = props.name;
-  const playlists = props.playlists;
-  const selectedPlaylist = props.selectedPlaylist;
+  const addSongToPlaylistNew = (playlist_id, title) => {
+    if (selectedPlaylist === null) {
+      throw new Error("No playlist selected");
+    }
+    addSongToPlaylist(playlist_id, title);
+  };
 
-  const deselectPlaylist = props.deselectPlaylist;
-  let logout, login;
-  if (isLoggedIn) {
-    logout = props.logout;
-  } else {
-    login = props.login;
-  }
-  const refreshPlaylists = props.refreshPlaylists;
-  const createPlaylist = props.createPlaylist;
-  const addSongToPlaylist = () => {
-    props.addSongToPlaylist(selectedPlaylist.id);
+  const createPlaylistNew = (newPlaylistName) => {
+    createPlaylist(newPlaylistName).then(refreshPlaylists());
   };
 
   return (
@@ -38,12 +44,36 @@ export function NavBar(props) {
               <button disabled>Deselect playlist</button>
             )}
             <div>
-              <button onClick={createPlaylist}>Create Playlist</button>
-              <input id="newPlaylistNameInput" type="text" size="20"></input>
+              <button
+                onClick={() => {
+                  createPlaylistNew(newPlaylistName);
+                  setNewPlaylistName("");
+                }}
+              >
+                Create Playlist
+              </button>
+              <input
+                type="text"
+                size="20"
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+              />
             </div>
             <div>
-              <button onClick={addSongToPlaylist}>Add Song</button>
-              <input id="songSearchInput" type="text" size="20"></input>
+              <button
+                onClick={() => {
+                  addSongToPlaylistNew(selectedPlaylist.id, newSongInput);
+                  setNewSongInput("");
+                }}
+              >
+                Add Song
+              </button>
+              <input
+                type="text"
+                size="20"
+                value={newSongInput}
+                onChange={(e) => setNewSongInput(e.target.value)}
+              />
             </div>
           </div>
         ) : (
