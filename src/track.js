@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { useDrag } from "react-dnd";
 import "./App.css";
 
-export function Track({ id, getTrackById, onPlay, onPause }) {
+export function Track({
+  id,
+  getTrackById,
+  onPlay,
+  onPause,
+  handleRemove,
+  triggerPause,
+}) {
   const [buttonText, setButtonText] = useState("Play");
   const [playing, setPlaying] = useState(false);
 
@@ -23,24 +31,25 @@ export function Track({ id, getTrackById, onPlay, onPause }) {
         setImageUrl(result.album.images[0].url);
       }
       setPreviewUrl(result.preview_url);
-      // setArtists(result.artists);
-      // setdurationMs(result.duration_ms);
-      // setExplicit(result.explicit);
     });
   }, [id]);
 
   /* Handles playing/pausing audio */
   const pauseMe = () => {
+    if (!audioRef.current) {
+      return;
+    }
+
     audioRef.current.pause();
     setPlaying(undefined);
     setButtonText("Play");
-
-    if (onPause) {
-      onPause();
-    }
   };
 
   const playMe = () => {
+    if (!audioRef.current) {
+      return;
+    }
+
     var playPromise = audioRef.current.play();
     playPromise
       .then(() => {
@@ -49,6 +58,7 @@ export function Track({ id, getTrackById, onPlay, onPause }) {
       })
       .catch((error) => console.log(error));
 
+    // pauses other track previews
     if (onPlay) {
       onPlay(() => {
         pauseMe();
@@ -63,6 +73,12 @@ export function Track({ id, getTrackById, onPlay, onPause }) {
       pauseMe();
     }
   };
+
+  useEffect(() => {
+    if (triggerPause !== undefined) {
+      pauseMe();
+    }
+  }, [triggerPause]);
 
   /* Colors tracks, sets up play button and audio on load */
   const getAverageRGB = (img) => {
@@ -120,18 +136,28 @@ export function Track({ id, getTrackById, onPlay, onPause }) {
     }
   };
 
+  /* Dragging functionality */
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: "track",
+    item: { id: id },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+    end: (item, monitor) => {
+      if (monitor.didDrop()) {
+        handleRemove(item.id);
+      }
+    },
+  }));
+
   return (
     <div
       id={id}
-      ref={divRef}
+      ref={drag}
       className="track"
-      draggable="true"
-      onDragStart={(e) => {
-        e.dataTransfer.setData("Text", e.target.id);
-        console.log("DRAG START", e.target.id);
-      }}
+      style={{ border: isDragging ? "5px solid red" : "0px" }}
     >
-      <button draggable="false" onClick={togglePlay} disabled={!previewUrl}>
+      <button onClick={togglePlay} disabled={!previewUrl}>
         {buttonText}
       </button>
       <audio
@@ -139,7 +165,10 @@ export function Track({ id, getTrackById, onPlay, onPause }) {
         src={previewUrl}
         type="audio/mp3"
         onEnded={pauseMe}
-        playbackrate={2}
+        onCanPlayThrough={(e) => {
+          e.target.playbackRate = 1.5;
+          e.target.volume = 0.05;
+        }}
       ></audio>
       <img
         src={imageUrl}
@@ -147,7 +176,7 @@ export function Track({ id, getTrackById, onPlay, onPause }) {
         width="35"
         height="35"
         draggable="false"
-        onLoad={(e) => setTrackStyle(e.target)}
+        // onLoad={(e) => setTrackStyle(e.target)}
       ></img>
       <p id="title" draggable="false">
         {name}

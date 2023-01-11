@@ -1,5 +1,5 @@
-import { useContext, useState } from "react";
-import { PlaylistId } from "./App.js";
+import { useContext, useEffect, useState } from "react";
+import { PlaylistIndex } from "./App.js";
 
 export function NavBar({
   isLoggedIn,
@@ -13,23 +13,37 @@ export function NavBar({
   createPlaylist,
   addSongToPlaylist,
 }) {
-  const { setPlaylistId } = useContext(PlaylistId);
+  const { setPlaylistIndex } = useContext(PlaylistIndex);
+  const [playlistId, setPlaylistId] = useState("");
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newSongInput, setNewSongInput] = useState("");
 
-  const addSongToPlaylistNew = (playlist_id, title) => {
+  useEffect(() => {
+    if (playlistId && selectedPlaylist) {
+      setPlaylistIndex(getPlaylistIndex(playlistId));
+    }
+  }, [playlists]);
+
+  const addSongToPlaylistNew = (playlistId, title) => {
     if (selectedPlaylist === null) {
       throw new Error("No playlist selected");
     }
-    addSongToPlaylist(playlist_id, title);
+    addSongToPlaylist(playlistId, title);
   };
 
-  const createPlaylistNew = (newPlaylistName) => {
-    createPlaylist(newPlaylistName).then(refreshPlaylists());
+  const getPlaylistIndex = (playlistId) => {
+    for (let i = 0; i < playlists.length; i++) {
+      if (playlists[i].id === playlistId) {
+        return i;
+      }
+    }
+
+    console.log(`Playlist index not found for ${playlistId}`);
+    return 0;
   };
 
   return (
-    <div>
+    <>
       <div className="behind-nav-bar"></div>
 
       <div className="nav-bar">
@@ -38,7 +52,7 @@ export function NavBar({
             <button onClick={logout}> Logout </button>
             <p>Hi, {name} </p>
             <button onClick={refreshPlaylists}> Refresh playlists</button>
-            {selectedPlaylist ? (
+            {playlistId ? (
               <button onClick={deselectPlaylist}>Deselect playlist</button>
             ) : (
               <button disabled>Deselect playlist</button>
@@ -46,7 +60,7 @@ export function NavBar({
             <div>
               <button
                 onClick={() => {
-                  createPlaylistNew(newPlaylistName);
+                  createPlaylist(newPlaylistName);
                   setNewPlaylistName("");
                 }}
               >
@@ -90,7 +104,9 @@ export function NavBar({
                     className="playlistButtons"
                     key={index}
                     onClick={() => {
-                      setPlaylistId(index);
+                      deselectPlaylist();
+                      setPlaylistIndex(index);
+                      setPlaylistId(playlist.id);
                     }}
                   >
                     {playlist.name}
@@ -100,6 +116,6 @@ export function NavBar({
             : null}
         </div>
       </div>
-    </div>
+    </>
   );
 }
