@@ -1,85 +1,98 @@
 import React, { useEffect, useState } from "react";
 import { Track as TrackComponent } from "./track";
+import { useDrop } from "react-dnd";
 
 export function Bucket({
-  initialPlaylistId,
+  id,
+  initialTrackIdsPromise,
   onPlay,
   onPause,
   getTrackById,
-  initialTrackIds,
+  handleSizeUpdate,
+  handleTracksUpdate,
+  triggerBucketPause,
   Track = TrackComponent,
 }) {
-  // track id's
-  const [currentTrackIds, setTrackIds] = useState([]);
+  const [ready, setReady] = useState(true);
+  const [triggerPause, setTriggerPause] = useState(false);
 
-  // const handleTrackDrag = (e) => {
-  //   if (!document.querySelector(".bucket.dragging")) {
-  //     e.preventDefault();
-  //     const afterElement = getDragAfterElement(bucket, e.clientY);
-  //     const draggable = document.querySelector(".track.dragging");
-  //     if (afterElement == null) {
-  //       bucket.appendChild(draggable);
-  //     } else {
-  //       bucket.insertBefore(draggable, afterElement);
-  //     }
-  //   }
-  // };
+  // on load, set current track ids to passed in track ids
+  const [trackIds, setTrackIds] = useState([]);
+  useEffect(() => {
+    if (initialTrackIdsPromise) {
+      setReady(false);
+      initialTrackIdsPromise
+        .then((result) => setTrackIds(result))
+        .then(() => setReady(true));
+    }
+  }, []);
+
+  // on track id update, update the size
+  useEffect(() => {
+    handleSizeUpdate(id, trackIds.length);
+    handleTracksUpdate(id, trackIds);
+    // console.log(trackIds);
+  }, [trackIds]);
+
+  // on add, add one more track id
+  const addTrackToBucket = (trackId) => {
+    // console.log("ADDING");
+    setTrackIds((trackIds) => [...trackIds, trackId]);
+  };
+
+  /* Dragging functionality */
+  const [{ isOver }, drop] = useDrop(() => ({
+    accept: "track",
+    drop: (item) => addTrackToBucket(item.id),
+    collect: (monitor) => ({
+      isOver: !!monitor.isOver(),
+    }),
+  }));
+
+  const handleRemove = (trackId) => {
+    const firstInstance = trackIds.findIndex((element) => element === trackId);
+
+    var newArray = [...trackIds];
+    newArray = [
+      ...newArray.slice(0, firstInstance),
+      ...newArray.slice(firstInstance + 1, newArray.length),
+    ];
+
+    setTrackIds(newArray);
+  };
+
+  /* Pausing all tracks */
+  const pauseAllTracks = () => {
+    setTriggerPause((triggerPause) => !triggerPause);
+  };
 
   useEffect(() => {
-    if (initialPlaylistId) {
-      setTrackIds(initialTrackIds);
+    if (triggerBucketPause !== undefined) {
+      pauseAllTracks();
     }
-  }, [initialPlaylistId, initialTrackIds]);
+  }, [triggerBucketPause]);
 
-  return (
+  return ready ? (
     <div
+      ref={drop}
+      id={id}
       className="bucket"
-      draggable={true}
-      // onDrop={(e) => {
-      //   const trackData = JSON.parse(e.dataTransfer.getData("text/plain"));
-      //   setTrackIds((currentTracks) => [...currentTracks, trackData]);
-      // }}
-      // onDragEnter={(e) => console.log("drag enter")}
-      // onDragStart={(e) => {
-      //   console.log(e.target.getAttribute("id"));
-      //   // Find which song is being dragged
-      //   const trackAsString = JSON.stringify(initialTrackIds[0]);
-      //   e.dataTransfer.effectAllowed = "move";
-      //   e.dataTransfer.setData("text/plain", trackAsString);
-      // }}
-      // onDragEnd={(e) => {
-      //   // Remove the song dragged
-      //   console.log(e.dataTransfer.getData("text/plain"));
-      // }}
-      // onDragOver={(e) => {
-      //   e.preventDefault();
-      // }}
-
-      // onDragStart={(e) => {
-      //   e.dataTransfer.setData("Text", e.target.id);
-      // }}
-      onDragEnter={(e) => {}}
-      onDragLeave={(e) => {}}
-      onDragOver={(e) => {
-        e.preventDefault();
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        const track = e.dataTransfer.getData("Text");
-        console.log(track);
-        e.target.appendChild(document.getElementById(track));
-      }}
+      style={{ backgroundColor: isOver ? "red" : "black" }}
     >
-      {currentTrackIds.map((trackId) => (
+      {trackIds.map((trackId) => (
         <Track
           key={trackId}
           id={trackId}
           getTrackById={getTrackById}
           onPlay={onPlay}
           onPause={onPause}
+          handleRemove={handleRemove}
+          triggerPause={triggerPause}
         />
       ))}
-      {currentTrackIds.length === 0 ? <div>Please drop here</div> : null}
+      {trackIds.length === 0 ? <div>Please drop here</div> : null}
     </div>
+  ) : (
+    <div>Loading...</div>
   );
 }

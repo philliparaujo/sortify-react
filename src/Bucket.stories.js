@@ -2,9 +2,11 @@ import React from "react";
 import { Bucket } from "./Bucket";
 import "./index.css";
 import "./App.css";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
-const fakeGetPlaylistTrackIds = (playlistId) => {
-  return Promise.resolve(["AAA", "BBB", "CCC", "DDD"]);
+const fakeInitialTrackIdsPromise = (trackIds) => {
+  return Promise.resolve(trackIds);
 };
 
 const fakeTrack = ({ id }) => (
@@ -17,46 +19,46 @@ export default {
   title: "Bucket",
   component: Bucket,
   args: {
-    initialPlaylistId: "123",
-    getPlaylistTrackIds: fakeGetPlaylistTrackIds,
+    initialTrackIdsPromise: null,
+    handleSizeUpdate: () => {},
     Track: fakeTrack,
   },
 };
 
-const Template = (args) => <Bucket {...args} />;
+const Template = (args) => (
+  <DndProvider backend={HTML5Backend}>
+    <Bucket {...args} />
+  </DndProvider>
+);
 
 export const empty = Template.bind({});
 empty.args = {
-  getPlaylistTrackIds: (playlistId) => {
-    return Promise.resolve([]);
-  },
+  initialTrackIdsPromise: fakeInitialTrackIdsPromise([]),
 };
 
 export const oneSong = Template.bind({});
 oneSong.args = {
-  getPlaylistTrackIds: (playlistId) => {
-    return Promise.resolve(["AAA"]);
-  },
+  initialTrackIdsPromise: fakeInitialTrackIdsPromise(["AAAA"]),
 };
 
 export const multipleSongs = Template.bind({});
 multipleSongs.args = {
-  getPlaylistTrackIds: (playlistId) => {
-    return Promise.resolve([
-      "AAA",
-      "BBB",
-      "CCC",
-      "DDD",
-      "EEE",
-      "FFF",
-      "GGG",
-      "HHH",
-      "III",
-      "JJJ",
-      "KKK",
-      "LLL",
-      "MMM",
-      "NNN",
-    ]);
-  },
+  initialTrackIdsPromise: fakeInitialTrackIdsPromise([
+    "AAAA",
+    "BBBB",
+    "CCCC",
+    "DDDD",
+    "EEEE",
+    "FFFF",
+    "GGGG",
+    "HHHH",
+    "IIII",
+    "JJJJ",
+    "KKKK",
+    "LLLL",
+    "MMMM",
+    "NNNN",
+    "OOOO",
+    "PPPP",
+  ]),
 };

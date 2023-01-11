@@ -220,6 +220,9 @@ export function useApi() {
 
   /* array of track ids from a playlist (within a Promise) */
   const getPlaylistTrackIds = (playlist_id) => {
+    if (!playlist_id) {
+      return;
+    }
     const getRestTrackIds = (href, token, tracks) => {
       return fetch(href, baseHeaders("GET", token))
         .then((result) => result.json())
@@ -265,9 +268,6 @@ export function useApi() {
       throw new Error("Title can't be empty!");
     }
 
-    const titleWords = title.split(" ");
-    console.log(titleWords);
-
     const data = JSON.stringify({
       name: title,
       public: true,
@@ -281,6 +281,9 @@ export function useApi() {
 
   /* add song matching search bar to playlist (within a Promise)*/
   const addSongToPlaylist = (playlist_id, title) => {
+    if (!playlist_id) {
+      return;
+    }
     searchByTitle(title, token)
       .then((result) => getTrackById(result[0]))
       .then((result) => {

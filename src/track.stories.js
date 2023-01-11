@@ -6,6 +6,8 @@ import lightImage from "./testData/lightAlbumImage.jpg";
 import previewSong from "./testData/defaultPreviewSong.mp3";
 import "./index.css";
 import "./App.css";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 const defaultTrackData = {
   name: "Default Song",
@@ -48,7 +50,11 @@ export default {
   // decorators: decorators,
 };
 
-const Template = (args) => <Track {...args} />;
+const Template = (args) => (
+  <DndProvider backend={HTML5Backend}>
+    <Track {...args} />
+  </DndProvider>
+);
 
 export const empty = Template.bind({});
 empty.args = {
