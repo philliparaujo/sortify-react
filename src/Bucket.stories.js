@@ -5,10 +5,6 @@ import "./App.css";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-const fakeInitialTrackIdsPromise = (trackIds) => {
-  return Promise.resolve(trackIds);
-};
-
 const fakeTrack = ({ id }) => (
   <div className="track" style={{ height: 35 }}>
     {id}
@@ -19,8 +15,11 @@ export default {
   title: "Bucket",
   component: Bucket,
   args: {
-    initialTrackIdsPromise: null,
-    handleSizeUpdate: () => {},
+    playlistId: "",
+    getPlaylistTrackIds: (playlistId) => {
+      return Promise.resolve([playlistId].flat());
+    },
+    handleTracksUpdate: () => {},
     Track: fakeTrack,
   },
 };
@@ -32,18 +31,15 @@ const Template = (args) => (
 );
 
 export const empty = Template.bind({});
-empty.args = {
-  initialTrackIdsPromise: fakeInitialTrackIdsPromise([]),
-};
 
 export const oneSong = Template.bind({});
 oneSong.args = {
-  initialTrackIdsPromise: fakeInitialTrackIdsPromise(["AAAA"]),
+  playlistId: "AAA",
 };
 
 export const multipleSongs = Template.bind({});
 multipleSongs.args = {
-  initialTrackIdsPromise: fakeInitialTrackIdsPromise([
+  playlistId: [
     "AAAA",
     "BBBB",
     "CCCC",
@@ -60,5 +56,5 @@ multipleSongs.args = {
     "NNNN",
     "OOOO",
     "PPPP",
-  ]),
+  ],
 };

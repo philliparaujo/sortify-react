@@ -4,73 +4,70 @@ import { useDrop } from "react-dnd";
 
 export function Bucket({
   id,
-  initialTrackIdsPromise,
+  playlistId,
+  getPlaylistTrackIds,
   onPlay,
   onPause,
   getTrackById,
-  handleSizeUpdate,
   handleTracksUpdate,
-  triggerBucketPause,
+  // triggerBucketPause,
   Track = TrackComponent,
 }) {
+  const [trackIds, setTrackIds] = useState([]);
   const [ready, setReady] = useState(true);
-  const [triggerPause, setTriggerPause] = useState(false);
+  // const [triggerPause, setTriggerPause] = useState(false);
 
   // on load, set current track ids to passed in track ids
-  const [trackIds, setTrackIds] = useState([]);
   useEffect(() => {
-    if (initialTrackIdsPromise) {
+    if (getPlaylistTrackIds && playlistId) {
       setReady(false);
-      initialTrackIdsPromise
+      getPlaylistTrackIds(playlistId)
         .then((result) => setTrackIds(result))
         .then(() => setReady(true));
     }
-  }, []);
+  }, [getPlaylistTrackIds, playlistId]);
 
-  // on track id update, update the size
+  // on track id update, update tracks
   useEffect(() => {
-    handleSizeUpdate(id, trackIds.length);
     handleTracksUpdate(id, trackIds);
-    // console.log(trackIds);
-  }, [trackIds]);
-
-  // on add, add one more track id
-  const addTrackToBucket = (trackId) => {
-    // console.log("ADDING");
-    setTrackIds((trackIds) => [...trackIds, trackId]);
-  };
+  }, [trackIds, handleTracksUpdate, id]);
 
   /* Dragging functionality */
+  const addTrackToBucket = (trackId) => {
+    setTrackIds((oldTrackIds) => [...oldTrackIds, trackId]);
+  };
+
+  const handleRemove = (trackId) => {
+    setTrackIds((oldTrackIds) => {
+      return oldTrackIds.filter((oldId) => oldId !== trackId);
+    });
+  };
+
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "track",
-    drop: (item) => addTrackToBucket(item.id),
+    drop: (item) => {
+      // HACK: setTimeout ensures track add happens after remove
+      //       necessary for drag into same bucket
+      setTimeout(() => {
+        addTrackToBucket(item.id);
+      }, 1);
+      return;
+    },
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
   }));
 
-  const handleRemove = (trackId) => {
-    const firstInstance = trackIds.findIndex((element) => element === trackId);
-
-    var newArray = [...trackIds];
-    newArray = [
-      ...newArray.slice(0, firstInstance),
-      ...newArray.slice(firstInstance + 1, newArray.length),
-    ];
-
-    setTrackIds(newArray);
-  };
-
   /* Pausing all tracks */
-  const pauseAllTracks = () => {
-    setTriggerPause((triggerPause) => !triggerPause);
-  };
+  // const pauseAllTracks = () => {
+  //   setTriggerPause((triggerPause) => !triggerPause);
+  // };
 
-  useEffect(() => {
-    if (triggerBucketPause !== undefined) {
-      pauseAllTracks();
-    }
-  }, [triggerBucketPause]);
+  // useEffect(() => {
+  //   if (triggerBucketPause !== undefined) {
+  //     pauseAllTracks();
+  //   }
+  // }, [triggerBucketPause]);
 
   return ready ? (
     <div
@@ -87,7 +84,7 @@ export function Bucket({
           onPlay={onPlay}
           onPause={onPause}
           handleRemove={handleRemove}
-          triggerPause={triggerPause}
+          // triggerPause={triggerPause}
         />
       ))}
       {trackIds.length === 0 ? <div>Please drop here</div> : null}
