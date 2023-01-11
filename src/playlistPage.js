@@ -132,17 +132,11 @@ export function PlaylistPage({
     [setBucketTracks]
   );
 
-  // const [triggerBucketPause, setTriggerBucketPause] = useState(false);
-  // const pauseAllBuckets = () => {
-  //   setTriggerBucketPause((triggerPause) => !triggerPause);
-  // };
-
   return (
     <>
       <h1>{title}</h1>
       <p>{displayName}</p>
       <button onClick={deletePlaylist}>Delete playlist</button>
-      {/* <button onClick={pauseAllBuckets}>Pause all</button> */}
       <button
         onClick={removeEmptyBucket}
         disabled={Object.keys(bucketIds).length < 2}
@@ -157,7 +151,6 @@ export function PlaylistPage({
         getTrackById={getTrackById}
         getPlaylistTrackIds={getPlaylistTrackIds}
         handleTracksUpdate={handleTracksUpdate}
-        // triggerBucketPause={triggerBucketPause}
       ></SuperBucket>
     </>
   );

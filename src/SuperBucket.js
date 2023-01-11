@@ -8,7 +8,6 @@ export function SuperBucket({
   getTrackById,
   getPlaylistTrackIds,
   handleTracksUpdate,
-  // triggerBucketPause,
 }) {
   return (
     <div className="superBucket">
@@ -23,7 +22,6 @@ export function SuperBucket({
             onPause={handlePause}
             getTrackById={getTrackById}
             handleTracksUpdate={handleTracksUpdate}
-            // triggerBucketPause={triggerBucketPause}
           />
         );
       })}

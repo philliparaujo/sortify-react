@@ -27,8 +27,7 @@ export function App() {
   // TODO: change URIComponent to URL object & query params in spotify.js searchByTitle
   // TODO: handle duplicate song ids
 
-  // TODO: fix app coloring
-  // TODO: fix drag and drop when dragging to same bucket
+  // TODO: fix drag and drop on same bucket to not append to end
 
   return (
     <DndProvider backend={HTML5Backend}>

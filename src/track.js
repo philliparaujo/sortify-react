@@ -1,22 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useDrag } from "react-dnd";
 import "./App.css";
 
-export function Track({
-  id,
-  getTrackById,
-  onPlay,
-  onPause,
-  handleRemove,
-  // triggerPause,
-}) {
+export function Track({ id, getTrackById, onPlay, onPause, handleRemove }) {
   const [buttonText, setButtonText] = useState("Play");
   const [playing, setPlaying] = useState(false);
 
   const divRef = React.useRef();
   const audioRef = React.useRef();
 
-  /* Get info from track id */
   const [name, setName] = useState();
   const [imageUrl, setImageUrl] = useState();
   const [previewUrl, setPreviewUrl] = useState();
@@ -24,15 +17,38 @@ export function Track({
   // const [durationMs, setDurationMs] = useState();
   // const [explicit, setExplicit] = useState();
 
+  /* on load, fetch track id info */
   useEffect(() => {
-    getTrackById(id).then((result) => {
-      setName(result.name);
-      if (result.album.images && result.album.images.length > 0) {
-        setImageUrl(result.album.images[0].url);
-      }
-      setPreviewUrl(result.preview_url);
-    });
-  }, [id]);
+    const fetch = () => {
+      getTrackById(id)
+        .then((result) => {
+          setName(result.name);
+          if (result.album.images && result.album.images.length > 0) {
+            setImageUrl(result.album.images[0].url);
+          }
+          setPreviewUrl(result.preview_url);
+          return result;
+        })
+        .then(() => {
+          clearInterval(retryFetch);
+        })
+        .catch((error) => console.log("ERRRRRRORRRRRRR"));
+    };
+
+    // first fetch attempt
+    fetch();
+
+    // if error on fetch (too many API calls), retry until successful
+    var retryFetch = setInterval(() => {
+      console.log("OH NO");
+      fetch();
+    }, 1000);
+
+    // on component unmount
+    return () => {
+      clearInterval(retryFetch);
+    };
+  }, [id, getTrackById]);
 
   /* Handles playing/pausing audio */
   const pauseMe = () => {
@@ -80,12 +96,6 @@ export function Track({
       });
     }
   };
-
-  // useEffect(() => {
-  //   if (triggerPause !== undefined) {
-  //     pauseMe();
-  //   }
-  // }, [triggerPause]);
 
   /* Colors tracks, sets up play button and audio on load */
   const getAverageRGB = (img) => {
@@ -158,36 +168,38 @@ export function Track({
   }));
 
   return (
-    <div
-      id={id}
-      ref={drag}
-      className="track"
-      style={{ border: isDragging ? "5px solid red" : "0px" }}
-    >
-      <button onClick={togglePlay} disabled={!previewUrl}>
-        {buttonText}
-      </button>
-      <audio
-        ref={audioRef}
-        src={previewUrl}
-        type="audio/mp3"
-        onEnded={pauseMe}
-        onCanPlayThrough={(e) => {
-          e.target.playbackRate = 3.0;
-          e.target.volume = 0.05;
-        }}
-      ></audio>
-      <img
-        src={imageUrl}
-        alt=""
-        width="35"
-        height="35"
-        draggable="false"
-        // onLoad={(e) => setTrackStyle(e.target)}
-      ></img>
-      <p id="title" draggable="false">
-        {name}
-      </p>
+    <div ref={drag}>
+      <div
+        id={id}
+        ref={divRef}
+        className="track"
+        style={{ border: isDragging ? "5px solid red" : "0px" }}
+      >
+        <button onClick={togglePlay} disabled={!previewUrl}>
+          {buttonText}
+        </button>
+        <audio
+          ref={audioRef}
+          src={previewUrl}
+          type="audio/mp3"
+          onEnded={pauseMe}
+          onCanPlayThrough={(e) => {
+            e.target.playbackRate = 1.5;
+            e.target.volume = 0.05;
+          }}
+        ></audio>
+        <img
+          src={imageUrl}
+          alt=""
+          width="35"
+          height="35"
+          draggable="false"
+          onLoad={(e) => setTrackStyle(e.target)}
+        ></img>
+        <p id="title" draggable="false">
+          {name}
+        </p>
+      </div>
     </div>
   );
 }
