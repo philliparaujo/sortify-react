@@ -10,21 +10,34 @@ export function Bucket({
   onPause,
   getTrackById,
   handleTracksUpdate,
-  // triggerBucketPause,
   Track = TrackComponent,
 }) {
   const [trackIds, setTrackIds] = useState([]);
   const [ready, setReady] = useState(true);
-  // const [triggerPause, setTriggerPause] = useState(false);
 
-  // on load, set current track ids to passed in track ids
+  /* on load, fetch trackIds */
   useEffect(() => {
-    if (getPlaylistTrackIds && playlistId) {
-      setReady(false);
+    const fetch = () => {
       getPlaylistTrackIds(playlistId)
         .then((result) => setTrackIds(result))
-        .then(() => setReady(true));
-    }
+        .then(() => clearInterval(retryFetch))
+        .then(() => setReady(true))
+        .catch((error) => console.log("ERRORRRRR"));
+    };
+
+    // first fetch attempt
+    fetch();
+
+    // if error on fetch (too many API calls), retry until successful
+    var retryFetch = setInterval(() => {
+      console.log("RETRYING");
+      fetch();
+    }, 1000);
+
+    // on component unmount
+    return () => {
+      clearInterval(retryFetch);
+    };
   }, [getPlaylistTrackIds, playlistId]);
 
   // on track id update, update tracks
@@ -58,17 +71,6 @@ export function Bucket({
     }),
   }));
 
-  /* Pausing all tracks */
-  // const pauseAllTracks = () => {
-  //   setTriggerPause((triggerPause) => !triggerPause);
-  // };
-
-  // useEffect(() => {
-  //   if (triggerBucketPause !== undefined) {
-  //     pauseAllTracks();
-  //   }
-  // }, [triggerBucketPause]);
-
   return ready ? (
     <div
       ref={drop}
@@ -84,7 +86,6 @@ export function Bucket({
           onPlay={onPlay}
           onPause={onPause}
           handleRemove={handleRemove}
-          // triggerPause={triggerPause}
         />
       ))}
       {trackIds.length === 0 ? <div>Please drop here</div> : null}
