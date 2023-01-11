@@ -13,9 +13,9 @@ export function PlaylistPage({
   getTrackById,
 }) {
   const [bucketIds, setBucketIds] = useState({});
-  const [bucketSizes, setBucketSizes] = useState({});
   const [bucketTracks, setBucketTracks] = useState({});
   const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
+  const [newId, setNewId] = useState(1);
 
   const id = playlist.id;
   const title = playlist.name;
@@ -27,12 +27,12 @@ export function PlaylistPage({
 
   /* Re-render on playlist select */
   useEffect(() => {
-    const firstId = Date.now();
-    setBucketIds({ [firstId]: id });
-    setBucketSizes({ [firstId]: 0 });
-    setBucketTracks({ [firstId]: getPlaylistTrackIds(id) });
+    setBucketIds({});
+    setBucketTracks({});
+    addBucket(id);
   }, [id]);
 
+  /* Useful playlistPage-only functions */
   const deletePlaylist = () => {
     const requestOptions = {
       method: "DELETE",
@@ -58,46 +58,41 @@ export function PlaylistPage({
       ],
     });
   };
-  const addBucket = () => {
-    const newId = Date.now();
-    const newBucketId = { [newId]: undefined };
-    setBucketIds({
-      ...bucketIds,
-      ...newBucketId,
-    });
-    const newBucketSize = { [newId]: 0 };
-    setBucketSizes({
-      ...bucketSizes,
-      ...newBucketSize,
+
+  const addBucket = (playlistId) => {
+    const newBucketId = { [newId]: playlistId };
+    setBucketIds((oldBucketIds) => {
+      return { ...oldBucketIds, ...newBucketId };
     });
     const newBucketTrack = { [newId]: [] };
-    setBucketTracks({
-      ...bucketTracks,
-      ...newBucketTrack,
+    setBucketTracks((oldBucketTracks) => {
+      return {
+        ...oldBucketTracks,
+        ...newBucketTrack,
+      };
     });
+
+    setNewId((oldId) => oldId + 1);
   };
+
   const removeEmptyBucket = () => {
     const idArray = Object.keys(bucketIds);
-    const sizeArray = Object.values(bucketSizes);
-    const size = idArray.length;
+    const sizeArray = Object.values(bucketTracks).map(
+      (tracks) => tracks.length
+    );
+    const numTracks = idArray.length;
 
     // if only one bucket present, keep it
     if (Object.keys(bucketIds).length === 1) return;
 
     var removed = false;
 
-    for (let i = size - 1; i > 0; i--) {
+    for (let i = numTracks - 1; i > 0; i--) {
       if (sizeArray[i] === 0 && !removed) {
         setBucketIds((currentBucketIds) => {
           const newBucketIds = { ...currentBucketIds };
           delete newBucketIds[idArray[i]];
           return newBucketIds;
-        });
-
-        setBucketSizes((currentBucketSizes) => {
-          const newBucketSizes = { ...currentBucketSizes };
-          delete newBucketSizes[idArray[i]];
-          return newBucketSizes;
         });
 
         setBucketTracks((currentBucketTracks) => {
@@ -125,51 +120,44 @@ export function PlaylistPage({
     setPauseCurrentTrack(undefined);
   };
 
-  const handleSizeUpdate = (bucketId, size) => {
-    const newSize = { [bucketId]: size };
+  const handleTracksUpdate = React.useMemo(
+    () => (bucketId, tracks) => {
+      const newTracks = { [bucketId]: tracks };
 
-    setBucketSizes((currentBucketIds) => {
-      const newBucketIds = { ...currentBucketIds, ...newSize };
-      return newBucketIds;
-    });
-  };
+      setBucketTracks((currentBucketTracks) => {
+        const newBucketTracks = { ...currentBucketTracks, ...newTracks };
+        return newBucketTracks;
+      });
+    },
+    [setBucketTracks]
+  );
 
-  const handleTracksUpdate = (bucketId, tracks) => {
-    const newTracks = { [bucketId]: tracks };
-
-    setBucketTracks((currentBucketTracks) => {
-      const newBucketTracks = { ...currentBucketTracks, ...newTracks };
-      return newBucketTracks;
-    });
-  };
-
-  const [triggerBucketPause, setTriggerBucketPause] = useState(false);
-  const pauseAllBuckets = () => {
-    setTriggerBucketPause((triggerPause) => !triggerPause);
-  };
+  // const [triggerBucketPause, setTriggerBucketPause] = useState(false);
+  // const pauseAllBuckets = () => {
+  //   setTriggerBucketPause((triggerPause) => !triggerPause);
+  // };
 
   return (
     <>
       <h1>{title}</h1>
       <p>{displayName}</p>
       <button onClick={deletePlaylist}>Delete playlist</button>
-      <button onClick={addBucket}>Add bucket</button>
+      {/* <button onClick={pauseAllBuckets}>Pause all</button> */}
       <button
         onClick={removeEmptyBucket}
         disabled={Object.keys(bucketIds).length < 2}
       >
         Remove empty bucket
       </button>
-      <button onClick={pauseAllBuckets}>Pause all</button>
+      <button onClick={() => addBucket()}>Add bucket</button>
       <SuperBucket
         bucketIds={bucketIds}
         handlePlay={handlePlay}
         handlePause={handlePause}
         getTrackById={getTrackById}
         getPlaylistTrackIds={getPlaylistTrackIds}
-        handleSizeUpdate={handleSizeUpdate}
         handleTracksUpdate={handleTracksUpdate}
-        triggerBucketPause={triggerBucketPause}
+        // triggerBucketPause={triggerBucketPause}
       ></SuperBucket>
     </>
   );

@@ -8,7 +8,7 @@ export function Track({
   onPlay,
   onPause,
   handleRemove,
-  triggerPause,
+  // triggerPause,
 }) {
   const [buttonText, setButtonText] = useState("Play");
   const [playing, setPlaying] = useState(false);
@@ -72,13 +72,20 @@ export function Track({
     } else {
       pauseMe();
     }
+
+    // correctly plays song if paused by onEnded
+    if (onPause) {
+      onPause(() => {
+        playMe();
+      });
+    }
   };
 
-  useEffect(() => {
-    if (triggerPause !== undefined) {
-      pauseMe();
-    }
-  }, [triggerPause]);
+  // useEffect(() => {
+  //   if (triggerPause !== undefined) {
+  //     pauseMe();
+  //   }
+  // }, [triggerPause]);
 
   /* Colors tracks, sets up play button and audio on load */
   const getAverageRGB = (img) => {
@@ -166,7 +173,7 @@ export function Track({
         type="audio/mp3"
         onEnded={pauseMe}
         onCanPlayThrough={(e) => {
-          e.target.playbackRate = 1.5;
+          e.target.playbackRate = 3.0;
           e.target.volume = 0.05;
         }}
       ></audio>

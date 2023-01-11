@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Bucket } from "./Bucket";
 
 export function SuperBucket({
@@ -7,25 +7,23 @@ export function SuperBucket({
   handlePause,
   getTrackById,
   getPlaylistTrackIds,
-  handleSizeUpdate,
   handleTracksUpdate,
-  triggerBucketPause,
+  // triggerBucketPause,
 }) {
   return (
     <div className="superBucket">
       {Object.keys(bucketIds).map((id) => {
-        const playlistId = bucketIds[id];
         return (
           <Bucket
             key={id}
             id={id}
-            initialTrackIdsPromise={getPlaylistTrackIds(playlistId)}
+            playlistId={bucketIds[id]}
+            getPlaylistTrackIds={getPlaylistTrackIds}
             onPlay={(pauseMe) => handlePlay(pauseMe)}
             onPause={handlePause}
             getTrackById={getTrackById}
-            handleSizeUpdate={handleSizeUpdate}
             handleTracksUpdate={handleTracksUpdate}
-            triggerBucketPause={triggerBucketPause}
+            // triggerBucketPause={triggerBucketPause}
           />
         );
       })}
