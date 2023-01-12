@@ -58,8 +58,8 @@ export function App() {
                 playlist={selectedPlaylist}
                 refreshPlaylists={api.refreshPlaylists}
                 getPlaylistTrackIds={api.getPlaylistTrackIds}
-                deselectPlaylist={deselectPlaylist}
                 getTrackById={api.getTrackById}
+                updatePlaylistOrder={api.updatePlaylistOrder}
               ></PlaylistPage>
             ) : null}
           </div>

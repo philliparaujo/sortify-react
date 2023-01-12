@@ -11,19 +11,21 @@ export function PlaylistPage({
   refreshPlaylists,
   getPlaylistTrackIds,
   getTrackById,
+  updatePlaylistOrder,
 }) {
   const [bucketIds, setBucketIds] = useState({});
   const [bucketTracks, setBucketTracks] = useState({});
   const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
   const [newId, setNewId] = useState(1);
+  const [playlistUpdates, setPlaylistUpdates] = useState([]);
 
   const id = playlist.id;
   const title = playlist.name;
   const displayName = playlist.owner.display_name;
+  const numTracks = playlist.tracks.total;
   // const url = playlist.external_urls.spotify;
   // const image = playlist.images;
   // const userId = playlist.owner.id;
-  // const numTracks = playlist.tracks.total;
 
   /* Re-render on playlist select */
   useEffect(() => {
@@ -120,8 +122,9 @@ export function PlaylistPage({
     setPauseCurrentTrack(undefined);
   };
 
-  const handleTracksUpdate = React.useMemo(
-    () => (bucketId, tracks) => {
+  /* Handling state of tracks in bucket */
+  const handleTracksUpdate = React.useCallback(
+    (bucketId, tracks) => {
       const newTracks = { [bucketId]: tracks };
 
       setBucketTracks((currentBucketTracks) => {
@@ -131,6 +134,38 @@ export function PlaylistPage({
     },
     [setBucketTracks]
   );
+
+  const updatePlaylist = (playlistUpdates) => {
+    const inputArray = playlistUpdates.split(",");
+    if (inputArray.length % 2 === 1) {
+      throw new Error("odd number of inputs in updatePlaylist");
+    }
+    if (!inputArray.every((value) => value <= numTracks)) {
+      throw new Error("at least one input WAY too large");
+    }
+
+    var newArray = [];
+    for (let i = 0; i < inputArray.length / 2; i++) {
+      var temp = inputArray[2 * i];
+      var temp2 = inputArray[2 * i + 1];
+      newArray.push([temp, temp2]);
+    }
+    if (!newArray.every((values) => values[0] < numTracks)) {
+      throw new Error("at least one input too large");
+    }
+
+    var result = Promise.resolve();
+    newArray.forEach((values) => {
+      result = result.then(() => {
+        // console.log(values[0], values[1]);
+        return updatePlaylistOrder(
+          id,
+          parseInt(values[0]),
+          parseInt(values[1])
+        );
+      });
+    });
+  };
 
   return (
     <>
@@ -144,6 +179,19 @@ export function PlaylistPage({
         Remove empty bucket
       </button>
       <button onClick={() => addBucket()}>Add bucket</button>
+      <button
+        onClick={() => {
+          updatePlaylist(playlistUpdates);
+        }}
+      >
+        Update playlist order
+      </button>
+      <input
+        type="text"
+        size="30"
+        value={playlistUpdates}
+        onChange={(e) => setPlaylistUpdates(e.target.value)}
+      ></input>
       <SuperBucket
         bucketIds={bucketIds}
         handlePlay={handlePlay}
