@@ -75,6 +75,13 @@ const genericPost = (request, token, data) => {
   ).then((result) => result.json());
 };
 
+const genericPut = (request, token, data) => {
+  return fetch(
+    `${baseURI}/${request}`,
+    Object.assign(baseHeaders("PUT", token), { body: data })
+  ).then((result) => result.json());
+};
+
 /* string (within a Promise) */
 const getDisplayName = (token) => {
   return genericGet(`me`, token).then((result) => result.display_name);
@@ -279,7 +286,7 @@ export function useApi() {
     });
   };
 
-  /* add song matching search bar to playlist (within a Promise)*/
+  /* add song matching search bar to playlist */
   const addSongToPlaylist = (playlist_id, title) => {
     if (!playlist_id) {
       return;
@@ -293,14 +300,27 @@ export function useApi() {
           uris: [result.uri],
           position: numSongs,
         });
-        return genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
+        genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
           refreshPlaylists
         );
       });
   };
 
+  /* track information from id (within a Promise) */
   const getTrackById = (song_id) => {
     return genericGet(`tracks/${song_id}`, token);
+  };
+
+  /* Updates order of song in playlist, returns snapshot id (within a Promise) */
+  const updatePlaylistOrder = (playlist_id, song_index, new_index) => {
+    const data = JSON.stringify({
+      range_start: song_index,
+      insert_before: new_index,
+      range_length: 1,
+    });
+    return genericPut(`playlists/${playlist_id}/tracks`, token, data).then(
+      refreshPlaylists
+    );
   };
 
   /* passes information to App.js */
@@ -318,6 +338,7 @@ export function useApi() {
         createPlaylist: createPlaylist,
         addSongToPlaylist: addSongToPlaylist,
         getTrackById: getTrackById,
+        updatePlaylistOrder: updatePlaylistOrder,
       }
     : {
         isLoggedIn: false,

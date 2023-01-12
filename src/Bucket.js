@@ -18,10 +18,23 @@ export function Bucket({
   /* on load, fetch trackIds */
   useEffect(() => {
     const fetch = () => {
+      if (!playlistId) {
+        clearInterval(retryFetch);
+        return;
+      }
+
       getPlaylistTrackIds(playlistId)
-        .then((result) => setTrackIds(result))
-        .then(() => clearInterval(retryFetch))
-        .then(() => setReady(true))
+        .then((result) => {
+          setTrackIds(result);
+          return result;
+        })
+        .then((result) => {
+          clearInterval(retryFetch);
+          return result;
+        })
+        .then(() => {
+          setReady(true);
+        })
         .catch((error) => console.log("ERRORRRRR"));
     };
 
@@ -43,10 +56,17 @@ export function Bucket({
   // on track id update, update tracks
   useEffect(() => {
     handleTracksUpdate(id, trackIds);
-  }, [trackIds, handleTracksUpdate, id]);
+    if (playlistId) {
+      getPlaylistTrackIds(playlistId).then((result) => {
+        console.log(trackIds, result);
+        console.log(trackIds.every((value, index) => value === result[index]));
+      });
+    }
+  }, [trackIds, handleTracksUpdate, id, getPlaylistTrackIds, playlistId]);
 
   /* Dragging functionality */
   const addTrackToBucket = (trackId) => {
+    console.log(trackIds);
     setTrackIds((oldTrackIds) => [...oldTrackIds, trackId]);
   };
 
