@@ -3,8 +3,26 @@ import { useCallback } from "react";
 import { useDrag } from "react-dnd";
 import "./App.css";
 
-export function Track({ id, getTrackById, onPlay, onPause, handleRemove }) {
-  const [buttonText, setButtonText] = useState("Play");
+import { Box, IconButton, Typography } from "@mui/material";
+import {
+  ArrowUpward,
+  ArrowDownward,
+  PlayArrow,
+  Pause,
+} from "@mui/icons-material";
+
+export function Track({
+  id,
+  getTrackById,
+  onPlay,
+  onPause,
+  handleRemove,
+  onMoveUp,
+  onMoveDown,
+}) {
+  const [darkBackground, setDarkBackground] = useState(true);
+
+  const [playState, setPlayState] = useState(<PlayArrow />);
   const [playing, setPlaying] = useState(false);
 
   const divRef = React.useRef();
@@ -58,7 +76,7 @@ export function Track({ id, getTrackById, onPlay, onPause, handleRemove }) {
 
     audioRef.current.pause();
     setPlaying(undefined);
-    setButtonText("Play");
+    setPlayState(<PlayArrow />);
   };
 
   const playMe = () => {
@@ -70,7 +88,7 @@ export function Track({ id, getTrackById, onPlay, onPause, handleRemove }) {
     playPromise
       .then(() => {
         setPlaying(id);
-        setButtonText("Pause");
+        setPlayState(<Pause />);
       })
       .catch((error) => console.log(error));
 
@@ -147,9 +165,9 @@ export function Track({ id, getTrackById, onPlay, onPause, handleRemove }) {
     const relativeLuminance =
       0.2126 * RGB.r ** 2.2 + 0.7152 * RGB.g ** 2.2 + 0.0722 * RGB.b ** 2.2;
 
-    divRef.current.children.namedItem("title").style.color = "white";
     if (relativeLuminance > 100000) {
-      divRef.current.children.namedItem("title").style.color = "black";
+      setDarkBackground(false);
+      setPlayState(<PlayArrow />);
     }
   };
 
@@ -169,15 +187,47 @@ export function Track({ id, getTrackById, onPlay, onPause, handleRemove }) {
 
   return (
     <div ref={drag}>
-      <div
+      <Box
         id={id}
         ref={divRef}
         className="track"
-        style={{ border: isDragging ? "5px solid red" : "0px" }}
+        border={isDragging ? "5px solid red" : "0px"}
+        style={{
+          display: "flex",
+          flexDirection: "row",
+        }}
       >
-        <button onClick={togglePlay} disabled={!previewUrl}>
-          {buttonText}
-        </button>
+        <IconButton
+          onClick={togglePlay}
+          disabled={!previewUrl}
+          style={{ color: darkBackground ? "#FFFFFF" : "#000000" }}
+          size="small"
+        >
+          {playState}
+        </IconButton>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <IconButton
+            onClick={() => onMoveUp(id)}
+            style={{ backgroundColor: "lightgreen", padding: 0 }}
+            disabled={onMoveUp === undefined}
+            size="small"
+          >
+            <ArrowUpward className="arrows" fontSize="small" />
+          </IconButton>
+          <IconButton
+            onClick={() => onMoveDown(id)}
+            style={{ backgroundColor: "coral", padding: 0 }}
+            disabled={onMoveUp === undefined}
+            size="small"
+          >
+            <ArrowDownward className="arrows" fontSize="small" />
+          </IconButton>
+        </div>
         <audio
           ref={audioRef}
           src={previewUrl}
@@ -191,15 +241,19 @@ export function Track({ id, getTrackById, onPlay, onPause, handleRemove }) {
         <img
           src={imageUrl}
           alt=""
-          width="35"
-          height="35"
+          width="40"
+          height="40"
           draggable="false"
           onLoad={(e) => setTrackStyle(e.target)}
         ></img>
-        <p id="title" draggable="false">
+        <Typography
+          id="title"
+          draggable="false"
+          sx={{ color: darkBackground ? "#FFFFFF" : "#000000" }}
+        >
           {name}
-        </p>
-      </div>
+        </Typography>
+      </Box>
     </div>
   );
 }

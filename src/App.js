@@ -7,6 +7,8 @@ import { NavBar } from "./navBar";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+import { Box, Typography } from "@mui/material";
+
 export const PlaylistIndex = createContext();
 
 export function App() {
@@ -27,11 +29,13 @@ export function App() {
   // TODO: change URIComponent to URL object & query params in spotify.js searchByTitle
   // TODO: handle duplicate song ids
 
-  // TODO: fix drag and drop on same bucket to not append to end
+  // TODO: organize imports
+  // TODO: finish adding MUI
+  // TODO: get playlist update to work on track dragg
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="App">
+      <Box className="App">
         <PlaylistIndex.Provider value={{ playlistIndex, setPlaylistIndex }}>
           <NavBar
             isLoggedIn={api.isLoggedIn}
@@ -47,24 +51,29 @@ export function App() {
           ></NavBar>
         </PlaylistIndex.Provider>
 
-        <div className="App-body">
-          <header className="App-header">
-            <h1>Sortify </h1>
-          </header>
+        <Box className="App-body">
+          <Typography
+            sx={{ fontWeight: "medium" }}
+            variant="h1"
+            bgcolor="primary.dark"
+            color="primary.contrastText"
+          >
+            Sortify
+          </Typography>
 
-          <div className="content">
+          <Box className="content">
             {selectedPlaylist ? (
               <PlaylistPage
                 playlist={selectedPlaylist}
-                refreshPlaylists={api.refreshPlaylists}
                 getPlaylistTrackIds={api.getPlaylistTrackIds}
                 getTrackById={api.getTrackById}
                 updatePlaylistOrder={api.updatePlaylistOrder}
+                deletePlaylist={api.deletePlaylist}
               ></PlaylistPage>
             ) : null}
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
     </DndProvider>
   );
 }

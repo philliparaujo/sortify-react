@@ -7,19 +7,17 @@ body {
 
 #root {
   --headerHeight: 90px;
-  --navHeaderHeight: 151.4px;
-  --navBarWidth: 300px;
-  --appPadding: 0px;
-
-  --contentBackground: pink;
+  --navHeaderHeight: 220px;
+  --navBarWidth: 400px;
+  --bucketPadding: 20px;
+  --contentBackground: #fafafa;
+  background-color: var(--contentBackground);
 }
 
 .App {
   text-align: center;
   display: flex;
   flex-direction: row;
-  height: 100%;
-  padding: var(--appPadding);
 }
 
 /* Nav bar */
@@ -29,73 +27,34 @@ body {
   width: var(--navBarWidth);
 }
 
+/* keeps nav bar fixed on left of screen */
 .nav-bar {
   position: fixed;
   top: 0;
   bottom: 0;
-  background-color: aquamarine;
   width: var(--navBarWidth);
-  height: calc(100vh - 2 * var(--appPadding));
-  margin-top: var(--appPadding);
-  /* overflow: hidden; */
 }
 
-.nav-header {
-  background-color: gray;
-  height: var(--navHeaderHeight);
-}
-
-.nav-header > p {
-  margin: 0;
-}
-
+/* vertically aligns refresh/deselect buttons */
 .nav-header > button {
   display: block;
   margin: auto;
 }
 
+/* deals with scroll */
 .allPlaylists {
-  height: calc(100% - var(--navHeaderHeight) - 0px);
-  overflow: scroll;
-  overflow-x: hidden;
-}
-
-.playlistButtons {
-  border: 0;
-  background-color: transparent;
-  color: blue;
-}
-.playlistButtons:hover {
-  color: red;
+  height: calc(100% - var(--navHeaderHeight));
+  overflow-y: scroll;
 }
 
 /* Body */
 .App-body {
-  background-color: yellow;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
 /* Header */
-.App-header {
-  background-color: #282c34;
-  font-size: calc(10px + 2vmin);
-  color: white;
-
-  align-items: center;
-  justify-content: center;
-  min-height: var(--headerHeight);
-  overflow: hidden;
-}
-
-.App-header P {
-  margin: 0px;
-}
-
-.App-header h1 {
-  margin: 0px;
-}
 
 /* Playlist Page */
 .content {
@@ -116,7 +75,7 @@ body {
   background-color: #333;
   width: 227px;
   margin: 6px;
-  padding: 20px;
+  padding: var(--bucketPadding);
   height: fit-content;
   /* min-height: 100px; */
   color: white;
@@ -130,10 +89,6 @@ body {
   background-color: rgb(200, 200, 200, 0.5);
   outline: 1px solid white;
   text-align: left;
-}
-
-.track > button {
-  float: left;
 }
 
 .track > img {

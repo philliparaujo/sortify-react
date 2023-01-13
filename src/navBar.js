@@ -1,6 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { PlaylistIndex } from "./App.js";
 
+import { Box, Button, TextField, Typography } from "@mui/material";
+
 export function NavBar({
   isLoggedIn,
   name,
@@ -44,64 +46,76 @@ export function NavBar({
 
   return (
     <>
-      <div className="behind-nav-bar"></div>
+      <Box className="behind-nav-bar"></Box>
 
-      <div className="nav-bar">
+      <Box className="nav-bar" bgcolor="common.white" boxShadow={2}>
         {isLoggedIn ? (
-          <div className="nav-header">
-            <button onClick={logout}> Logout </button>
-            <p>Hi, {name} </p>
-            <button onClick={refreshPlaylists}> Refresh playlists</button>
+          <Box className="nav-header" boxShadow={2}>
+            <Button variant="contained" color="secondary" onClick={logout}>
+              Logout
+            </Button>
+            <Typography variant="h6">Hi, {name} </Typography>
+            <Button variant="contained" onClick={refreshPlaylists}>
+              Refresh playlists
+            </Button>
             {playlistId ? (
-              <button onClick={deselectPlaylist}>Deselect playlist</button>
+              <Button variant="contained" onClick={deselectPlaylist}>
+                Deselect playlist
+              </Button>
             ) : (
-              <button disabled>Deselect playlist</button>
+              <Button variant="contained" disabled>
+                Deselect playlist
+              </Button>
             )}
-            <div>
-              <button
+            <Box>
+              <Button
+                variant="contained"
                 onClick={() => {
                   createPlaylist(newPlaylistName);
                   setNewPlaylistName("");
                 }}
               >
                 Create Playlist
-              </button>
-              <input
-                type="text"
-                size="20"
+              </Button>
+              <TextField
+                size="small"
+                variant="outlined"
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
               />
-            </div>
-            <div>
-              <button
+            </Box>
+            <Box>
+              <Button
+                variant="contained"
                 onClick={() => {
                   addSongToPlaylistNew(selectedPlaylist.id, newSongInput);
                   setNewSongInput("");
                 }}
               >
                 Add Song
-              </button>
-              <input
-                type="text"
-                size="20"
+              </Button>
+              <TextField
+                size="small"
+                variant="outlined"
                 value={newSongInput}
                 onChange={(e) => setNewSongInput(e.target.value)}
               />
-            </div>
-          </div>
+            </Box>
+          </Box>
         ) : (
-          <div className="nav-header">
-            <button onClick={login}> Login </button>
-          </div>
+          <Box className="nav-header">
+            <Button variant="contained" color="secondary" onClick={login}>
+              Login
+            </Button>
+          </Box>
         )}
 
-        <div className="allPlaylists">
+        <Box className="allPlaylists">
           {isLoggedIn && playlists
             ? playlists.map((playlist, index) => (
-                <div key={index}>
-                  <button
-                    className="playlistButtons"
+                <Box key={index}>
+                  <Button
+                    variant="text"
                     key={index}
                     onClick={() => {
                       deselectPlaylist();
@@ -110,12 +124,12 @@ export function NavBar({
                     }}
                   >
                     {playlist.name}
-                  </button>
-                </div>
+                  </Button>
+                </Box>
               ))
             : null}
-        </div>
-      </div>
+        </Box>
+      </Box>
     </>
   );
 }

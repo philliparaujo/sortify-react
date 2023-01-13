@@ -3,21 +3,34 @@ import { confirmAlert } from "react-confirm-alert"; // confirmAlert JS
 import "react-confirm-alert/src/react-confirm-alert.css"; // confirmAlert CSS
 import { SuperBucket } from "./SuperBucket";
 
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
+
 /* props = {playlist: ...,
             getPlaylistTracks: (from api),
             refreshPlaylists: (from api) */
 export function PlaylistPage({
   playlist,
-  refreshPlaylists,
   getPlaylistTrackIds,
   getTrackById,
   updatePlaylistOrder,
+  deletePlaylist,
 }) {
-  const [bucketIds, setBucketIds] = useState({});
+  const [bucketPlaylistIds, setBucketPlaylistIds] = useState([]);
   const [bucketTracks, setBucketTracks] = useState({});
+  const [tracks, setTracks] = useState([]);
   const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
-  const [newId, setNewId] = useState(1);
+  const [newId, setNewId] = useState(0);
   const [playlistUpdates, setPlaylistUpdates] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
 
   const id = playlist.id;
   const title = playlist.name;
@@ -29,43 +42,30 @@ export function PlaylistPage({
 
   /* Re-render on playlist select */
   useEffect(() => {
-    setBucketIds({});
+    setBucketPlaylistIds([]);
     setBucketTracks({});
-    addBucket(id);
   }, [id]);
 
+  useEffect(() => {
+    if (bucketPlaylistIds.length === 0) {
+      addBucket(id);
+    }
+  }, [bucketPlaylistIds]);
+
+  useEffect(() => {
+    setTracks(
+      Object.values(bucketTracks)
+        .flat()
+        .filter((track) => track.localeCompare("#") !== 0)
+    );
+  }, [bucketTracks]);
+
   /* Useful playlistPage-only functions */
-  const deletePlaylist = () => {
-    const requestOptions = {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${window.localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
-    };
-
-    confirmAlert({
-      title: `Delete ${title}?`,
-      buttons: [
-        {
-          label: "Yes",
-          onClick: () => {
-            return fetch(
-              `https://api.spotify.com/v1/` + `playlists/${id}/followers`,
-              requestOptions
-            ).then(refreshPlaylists);
-          },
-        },
-        { label: "No" },
-      ],
-    });
-  };
-
   const addBucket = (playlistId) => {
-    const newBucketId = { [newId]: playlistId };
-    setBucketIds((oldBucketIds) => {
-      return { ...oldBucketIds, ...newBucketId };
+    setBucketPlaylistIds((oldBucketPlaylistIds) => {
+      return oldBucketPlaylistIds.concat(playlistId);
     });
+
     const newBucketTrack = { [newId]: [] };
     setBucketTracks((oldBucketTracks) => {
       return {
@@ -74,32 +74,29 @@ export function PlaylistPage({
       };
     });
 
-    setNewId((oldId) => oldId + 1);
+    setNewId(newId + 1);
   };
 
   const removeEmptyBucket = () => {
-    const idArray = Object.keys(bucketIds);
-    const sizeArray = Object.values(bucketTracks).map(
-      (tracks) => tracks.length
-    );
-    const numTracks = idArray.length;
+    const idArray = Object.keys(bucketTracks);
+    const maxId = Math.max.apply(Math, idArray);
 
     // if only one bucket present, keep it
-    if (Object.keys(bucketIds).length === 1) return;
+    if (idArray.length <= 1) return;
 
     var removed = false;
 
-    for (let i = numTracks - 1; i > 0; i--) {
-      if (sizeArray[i] === 0 && !removed) {
-        setBucketIds((currentBucketIds) => {
-          const newBucketIds = { ...currentBucketIds };
-          delete newBucketIds[idArray[i]];
+    for (let i = maxId; i > 0; i--) {
+      if (bucketTracks[i] && bucketTracks[i].length === 0 && !removed) {
+        setBucketPlaylistIds((currentBucketIds) => {
+          const newBucketIds = [...currentBucketIds];
+          newBucketIds[i] = "#";
           return newBucketIds;
         });
 
         setBucketTracks((currentBucketTracks) => {
           const newBucketTracks = { ...currentBucketTracks };
-          delete newBucketTracks[idArray[i]];
+          newBucketTracks[i] = "#";
           return newBucketTracks;
         });
 
@@ -135,71 +132,73 @@ export function PlaylistPage({
     [setBucketTracks]
   );
 
-  const updatePlaylist = (playlistUpdates) => {
-    const inputArray = playlistUpdates.split(",");
-    if (inputArray.length % 2 === 1) {
-      throw new Error("odd number of inputs in updatePlaylist");
+  const updatePlaylist = (range_start, insert_before) => {
+    // console.log("PLAYLIST UPDATES", range_start, insert_before);
+
+    if (range_start >= numTracks) {
+      throw new Error("range start too large");
     }
-    if (!inputArray.every((value) => value <= numTracks)) {
-      throw new Error("at least one input WAY too large");
+    if (insert_before > numTracks) {
+      throw new Error("insert position too large");
     }
 
-    var newArray = [];
-    for (let i = 0; i < inputArray.length / 2; i++) {
-      var temp = inputArray[2 * i];
-      var temp2 = inputArray[2 * i + 1];
-      newArray.push([temp, temp2]);
-    }
-    if (!newArray.every((values) => values[0] < numTracks)) {
-      throw new Error("at least one input too large");
-    }
+    return updatePlaylistOrder(id, range_start, insert_before);
+  };
 
-    var result = Promise.resolve();
-    newArray.forEach((values) => {
-      result = result.then(() => {
-        // console.log(values[0], values[1]);
-        return updatePlaylistOrder(
-          id,
-          parseInt(values[0]),
-          parseInt(values[1])
-        );
-      });
-    });
+  const saveSongs = () => {
+    console.log(tracks);
   };
 
   return (
-    <>
-      <h1>{title}</h1>
-      <p>{displayName}</p>
-      <button onClick={deletePlaylist}>Delete playlist</button>
-      <button
-        onClick={removeEmptyBucket}
-        disabled={Object.keys(bucketIds).length < 2}
+    <Box>
+      <Typography variant="h3" sx={{ fontWeight: "medium" }}>
+        {title}
+      </Typography>
+      <Typography variant="h6">{displayName}</Typography>
+
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={() => setOpenDialog(true)}
       >
+        Delete playlist
+      </Button>
+      <Button variant="contained" onClick={removeEmptyBucket}>
         Remove empty bucket
-      </button>
-      <button onClick={() => addBucket()}>Add bucket</button>
-      <button
-        onClick={() => {
-          updatePlaylist(playlistUpdates);
-        }}
-      >
-        Update playlist order
-      </button>
-      <input
-        type="text"
-        size="30"
-        value={playlistUpdates}
-        onChange={(e) => setPlaylistUpdates(e.target.value)}
-      ></input>
+      </Button>
+      <Button variant="contained" onClick={() => addBucket()}>
+        Add bucket
+      </Button>
+      <Button variant="contained" color="secondary" onClick={saveSongs}>
+        Save
+      </Button>
+
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        <DialogTitle>Delete {title}?</DialogTitle>
+        <DialogContent>
+          <DialogContentText></DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setOpenDialog(false);
+              deletePlaylist(id);
+            }}
+          >
+            Yes
+          </Button>
+          <Button onClick={() => setOpenDialog(false)}>No</Button>
+        </DialogActions>
+      </Dialog>
+
       <SuperBucket
-        bucketIds={bucketIds}
+        bucketIds={bucketPlaylistIds}
         handlePlay={handlePlay}
         handlePause={handlePause}
         getTrackById={getTrackById}
         getPlaylistTrackIds={getPlaylistTrackIds}
         handleTracksUpdate={handleTracksUpdate}
       ></SuperBucket>
-    </>
+    </Box>
   );
 }
