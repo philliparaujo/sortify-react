@@ -1,28 +1,36 @@
 import { useContext, useEffect, useState } from "react";
-import { PlaylistIndex } from "./App.js";
+import { NavBarVisible, PlaylistIndex } from "./App.js";
 
-import { Box, Button, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  CssBaseline,
+  Divider,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  TextField,
+} from "@mui/material";
+import Drawer from "@mui/material/Drawer";
 
 export function NavBar({
   isLoggedIn,
-  name,
   playlists,
   selectedPlaylist,
   deselectPlaylist,
-  login,
-  logout,
   refreshPlaylists,
   createPlaylist,
   addSongToPlaylist,
 }) {
+  const { visible } = useContext(NavBarVisible);
   const { setPlaylistIndex } = useContext(PlaylistIndex);
-  const [playlistId, setPlaylistId] = useState("");
+  const [lastPlaylistId, setLastPlaylistId] = useState(undefined);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newSongInput, setNewSongInput] = useState("");
 
   useEffect(() => {
-    if (playlistId && selectedPlaylist) {
-      setPlaylistIndex(getPlaylistIndex(playlistId));
+    if (lastPlaylistId && selectedPlaylist) {
+      setPlaylistIndex(getPlaylistIndex(lastPlaylistId));
     }
   }, [playlists]);
 
@@ -44,92 +52,97 @@ export function NavBar({
     return 0;
   };
 
-  return (
-    <>
-      <Box className="behind-nav-bar"></Box>
+  const drawerWidth = 300;
 
-      <Box className="nav-bar" bgcolor="common.white" boxShadow={2}>
-        {isLoggedIn ? (
-          <Box className="nav-header" boxShadow={2}>
-            <Button variant="contained" color="secondary" onClick={logout}>
-              Logout
-            </Button>
-            <Typography variant="h6">Hi, {name} </Typography>
-            <Button variant="contained" onClick={refreshPlaylists}>
-              Refresh playlists
-            </Button>
-            {playlistId ? (
-              <Button variant="contained" onClick={deselectPlaylist}>
-                Deselect playlist
-              </Button>
-            ) : (
-              <Button variant="contained" disabled>
-                Deselect playlist
-              </Button>
-            )}
-            <Box>
-              <Button
-                variant="contained"
+  return (
+    <Box sx={{ display: "flex" }} style={{ background: "transparent" }}>
+      <CssBaseline enableColorScheme />
+      {isLoggedIn && playlists && visible ? (
+        <Drawer
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            "& .MuiDrawer-paper": {
+              width: drawerWidth,
+              boxSizing: "border-box",
+            },
+          }}
+          variant="persistent"
+          anchor="left"
+          open
+        >
+          <Divider />
+          <List>
+            <ListItem key={"H1"} disablePadding>
+              <ListItemButton onClick={refreshPlaylists}>
+                <ListItemText primary={"Refresh playlists"} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem key={"H2"} disablePadding>
+              <ListItemButton
+                disabled={!Boolean(selectedPlaylist)}
+                onClick={deselectPlaylist}
+              >
+                <ListItemText primary={"Deselect playlist"} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem key={"H3"} disablePadding>
+              <ListItemButton
+                disabled={!Boolean(newPlaylistName)}
                 onClick={() => {
                   createPlaylist(newPlaylistName);
                   setNewPlaylistName("");
                 }}
               >
-                Create Playlist
-              </Button>
+                <ListItemText primary={"Create playlist"} />
+              </ListItemButton>
               <TextField
+                style={{ paddingRight: 15 }}
                 size="small"
                 variant="outlined"
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
               />
-            </Box>
-            <Box>
-              <Button
-                variant="contained"
+            </ListItem>
+            <ListItem key={"H4"} disablePadding>
+              <ListItemButton
+                disabled={!Boolean(newSongInput)}
                 onClick={() => {
                   addSongToPlaylistNew(selectedPlaylist.id, newSongInput);
                   setNewSongInput("");
                 }}
               >
-                Add Song
-              </Button>
+                <ListItemText primary={"Add song"} />
+              </ListItemButton>
               <TextField
+                style={{ paddingRight: 15 }}
                 size="small"
                 variant="outlined"
                 value={newSongInput}
                 onChange={(e) => setNewSongInput(e.target.value)}
               />
-            </Box>
-          </Box>
-        ) : (
-          <Box className="nav-header">
-            <Button variant="contained" color="secondary" onClick={login}>
-              Login
-            </Button>
-          </Box>
-        )}
+            </ListItem>
+          </List>
 
-        <Box className="allPlaylists">
-          {isLoggedIn && playlists
-            ? playlists.map((playlist, index) => (
-                <Box key={index}>
-                  <Button
-                    variant="text"
-                    key={index}
-                    onClick={() => {
-                      deselectPlaylist();
-                      setPlaylistIndex(index);
-                      setPlaylistId(playlist.id);
-                    }}
-                  >
-                    {playlist.name}
-                  </Button>
-                </Box>
-              ))
-            : null}
-        </Box>
-      </Box>
-    </>
+          <Divider />
+
+          <List>
+            {playlists.map((playlist, index) => (
+              <ListItem key={index} disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    deselectPlaylist();
+                    setPlaylistIndex(index);
+                    setLastPlaylistId(playlist.id);
+                  }}
+                >
+                  <ListItemText primary={playlist.name} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
+      ) : null}
+    </Box>
   );
 }

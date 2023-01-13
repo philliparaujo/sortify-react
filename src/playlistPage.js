@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { confirmAlert } from "react-confirm-alert"; // confirmAlert JS
+import React, { useEffect, useState } from "react";
 import "react-confirm-alert/src/react-confirm-alert.css"; // confirmAlert CSS
 import { SuperBucket } from "./SuperBucket";
 
@@ -13,10 +12,8 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
+import { useCallback } from "react";
 
-/* props = {playlist: ...,
-            getPlaylistTracks: (from api),
-            refreshPlaylists: (from api) */
 export function PlaylistPage({
   playlist,
   getPlaylistTrackIds,
@@ -24,9 +21,7 @@ export function PlaylistPage({
   updatePlaylistOrder,
   deletePlaylist,
 }) {
-  const [bucketPlaylistIds, setBucketPlaylistIds] = useState([]);
-  const [bucketTracks, setBucketTracks] = useState({});
-  const [tracks, setTracks] = useState([]);
+  const [bucketTracks, setBucketTracks] = useState({}); // hash of buckets & tracks
   const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
   const [newId, setNewId] = useState(0);
   const [playlistUpdates, setPlaylistUpdates] = useState([]);
@@ -40,32 +35,10 @@ export function PlaylistPage({
   // const image = playlist.images;
   // const userId = playlist.owner.id;
 
-  /* Re-render on playlist select */
-  useEffect(() => {
-    setBucketPlaylistIds([]);
-    setBucketTracks({});
-  }, [id]);
-
-  useEffect(() => {
-    if (bucketPlaylistIds.length === 0) {
-      addBucket(id);
-    }
-  }, [bucketPlaylistIds]);
-
-  useEffect(() => {
-    setTracks(
-      Object.values(bucketTracks)
-        .flat()
-        .filter((track) => track.localeCompare("#") !== 0)
-    );
-  }, [bucketTracks]);
+  const bucketIdWithPlaylistId = 0;
 
   /* Useful playlistPage-only functions */
-  const addBucket = (playlistId) => {
-    setBucketPlaylistIds((oldBucketPlaylistIds) => {
-      return oldBucketPlaylistIds.concat(playlistId);
-    });
-
+  const addBucket = useCallback(() => {
     const newBucketTrack = { [newId]: [] };
     setBucketTracks((oldBucketTracks) => {
       return {
@@ -75,35 +48,38 @@ export function PlaylistPage({
     });
 
     setNewId(newId + 1);
-  };
+  }, [newId]);
 
   const removeEmptyBucket = () => {
-    const idArray = Object.keys(bucketTracks);
-    const maxId = Math.max.apply(Math, idArray);
-
-    // if only one bucket present, keep it
-    if (idArray.length <= 1) return;
+    const arrayOfBucketIds = Object.keys(bucketTracks);
+    arrayOfBucketIds.reverse();
 
     var removed = false;
 
-    for (let i = maxId; i > 0; i--) {
-      if (bucketTracks[i] && bucketTracks[i].length === 0 && !removed) {
-        setBucketPlaylistIds((currentBucketIds) => {
-          const newBucketIds = [...currentBucketIds];
-          newBucketIds[i] = "#";
-          return newBucketIds;
+    arrayOfBucketIds.forEach((bucketId) => {
+      if (!removed && bucketTracks[bucketId].length === 0) {
+        setBucketTracks((oldTracks) => {
+          const newTracks = { ...oldTracks };
+          delete newTracks[bucketId];
+          return newTracks;
         });
-
-        setBucketTracks((currentBucketTracks) => {
-          const newBucketTracks = { ...currentBucketTracks };
-          newBucketTracks[i] = "#";
-          return newBucketTracks;
-        });
-
         removed = true;
       }
-    }
+    });
   };
+
+  /* Re-render on playlist select */
+  useEffect(() => {
+    setBucketTracks({});
+    setNewId(0);
+  }, [id]);
+
+  /* Add bucket if currently no bucket (should only trigger on id change) */
+  useEffect(() => {
+    if (Object.keys(bucketTracks).length === 0) {
+      addBucket();
+    }
+  }, [bucketTracks, addBucket]);
 
   /* Handling memory of playing songs */
   const handlePlay = (pauseMe) => {
@@ -124,10 +100,10 @@ export function PlaylistPage({
     (bucketId, tracks) => {
       const newTracks = { [bucketId]: tracks };
 
-      setBucketTracks((currentBucketTracks) => {
-        const newBucketTracks = { ...currentBucketTracks, ...newTracks };
-        return newBucketTracks;
-      });
+      setBucketTracks((currentBucketTracks) => ({
+        ...currentBucketTracks,
+        ...newTracks,
+      }));
     },
     [setBucketTracks]
   );
@@ -146,7 +122,11 @@ export function PlaylistPage({
   };
 
   const saveSongs = () => {
-    console.log(tracks);
+    const sortedTracks = Object.values(bucketTracks)
+      .flat()
+      .filter((track) => track.localeCompare("#") !== 0);
+
+    console.log(sortedTracks);
   };
 
   return (
@@ -156,23 +136,28 @@ export function PlaylistPage({
       </Typography>
       <Typography variant="h6">{displayName}</Typography>
 
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={() => setOpenDialog(true)}
-      >
-        Delete playlist
-      </Button>
-      <Button variant="contained" onClick={removeEmptyBucket}>
-        Remove empty bucket
-      </Button>
-      <Button variant="contained" onClick={() => addBucket()}>
-        Add bucket
-      </Button>
-      <Button variant="contained" color="secondary" onClick={saveSongs}>
-        Save
-      </Button>
+      <Box>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => setOpenDialog(true)}
+        >
+          Delete playlist
+        </Button>
+        <Button variant="contained" color="secondary" onClick={saveSongs}>
+          Save
+        </Button>
+      </Box>
+      <Box>
+        <Button variant="contained" onClick={addBucket}>
+          Add bucket
+        </Button>
+        <Button variant="contained" onClick={removeEmptyBucket}>
+          Remove empty bucket
+        </Button>
+      </Box>
 
+      {/* Delete playlist dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Delete {title}?</DialogTitle>
         <DialogContent>
@@ -192,12 +177,14 @@ export function PlaylistPage({
       </Dialog>
 
       <SuperBucket
-        bucketIds={bucketPlaylistIds}
         handlePlay={handlePlay}
         handlePause={handlePause}
         getTrackById={getTrackById}
         getPlaylistTrackIds={getPlaylistTrackIds}
         handleTracksUpdate={handleTracksUpdate}
+        bucketIds={Object.keys(bucketTracks)}
+        bucketIdWithPlaylistId={bucketIdWithPlaylistId}
+        playlistId={id}
       ></SuperBucket>
     </Box>
   );

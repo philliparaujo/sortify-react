@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Track as TrackComponent } from "./track";
 import { useDrop } from "react-dnd";
-import { Box } from "@mui/material";
+import { Box, CssBaseline } from "@mui/material";
 
 export function Bucket({
   id,
@@ -110,11 +110,11 @@ export function Bucket({
   };
 
   return ready ? (
-    <Box
+    <div
       ref={drop}
       id={id}
       className="bucket"
-      style={{ backgroundColor: isOver ? "red" : "black" }}
+      style={{ backgroundColor: isOver ? "red" : "#333" }}
     >
       {trackIds.map((trackId) => (
         <Track
@@ -129,7 +129,7 @@ export function Bucket({
         />
       ))}
       {trackIds.length === 0 ? <div>Please drop here</div> : null}
-    </Box>
+    </div>
   ) : (
     <Box>Loading...</Box>
   );

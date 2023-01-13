@@ -6,45 +6,13 @@ body {
 }
 
 #root {
-  --headerHeight: 90px;
-  --navHeaderHeight: 220px;
-  --navBarWidth: 400px;
   --bucketPadding: 20px;
-  --contentBackground: #fafafa;
-  background-color: var(--contentBackground);
 }
 
 .App {
   text-align: center;
   display: flex;
   flex-direction: row;
-}
-
-/* Nav bar */
-
-/* required to center content since real nav bar has fixed position */
-.behind-nav-bar {
-  width: var(--navBarWidth);
-}
-
-/* keeps nav bar fixed on left of screen */
-.nav-bar {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: var(--navBarWidth);
-}
-
-/* vertically aligns refresh/deselect buttons */
-.nav-header > button {
-  display: block;
-  margin: auto;
-}
-
-/* deals with scroll */
-.allPlaylists {
-  height: calc(100% - var(--navHeaderHeight));
-  overflow-y: scroll;
 }
 
 /* Body */
@@ -58,26 +26,21 @@ body {
 
 /* Playlist Page */
 .content {
-  background-color: var(--contentBackground);
   width: 100%;
   display: inline-block;
-  min-height: calc(100% - var(--headerHeight));
 }
 
 .superBucket {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  background-color: var(--contentBackground);
 }
 
 .bucket {
-  background-color: #333;
-  width: 227px;
+  width: 275px;
   margin: 6px;
   padding: var(--bucketPadding);
   height: fit-content;
-  /* min-height: 100px; */
   color: white;
 }
 
