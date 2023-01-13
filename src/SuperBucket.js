@@ -1,6 +1,8 @@
 import React from "react";
 import { Bucket } from "./Bucket";
 
+import { Box } from "@mui/material";
+
 export function SuperBucket({
   bucketIds,
   handlePlay,
@@ -10,13 +12,17 @@ export function SuperBucket({
   handleTracksUpdate,
 }) {
   return (
-    <div className="superBucket">
-      {Object.keys(bucketIds).map((id) => {
+    <Box className="superBucket">
+      {bucketIds.map((id, index) => {
+        if (id && String(id).localeCompare("#") === 0) {
+          return null;
+        }
+
         return (
           <Bucket
-            key={id}
-            id={id}
-            playlistId={bucketIds[id]}
+            key={index}
+            id={index}
+            playlistId={bucketIds[index]}
             getPlaylistTrackIds={getPlaylistTrackIds}
             onPlay={(pauseMe) => handlePlay(pauseMe)}
             onPause={handlePause}
@@ -25,6 +31,6 @@ export function SuperBucket({
           />
         );
       })}
-    </div>
+    </Box>
   );
 }

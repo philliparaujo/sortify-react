@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Track as TrackComponent } from "./track";
 import { useDrop } from "react-dnd";
+import { Box } from "@mui/material";
 
 export function Bucket({
   id,
@@ -43,7 +44,7 @@ export function Bucket({
 
     // if error on fetch (too many API calls), retry until successful
     var retryFetch = setInterval(() => {
-      console.log("RETRYING");
+      console.log("RETRYING playlist fetch");
       fetch();
     }, 1000);
 
@@ -53,26 +54,19 @@ export function Bucket({
     };
   }, [getPlaylistTrackIds, playlistId]);
 
-  // on track id update, update tracks
+  /* on track id update, update tracks for playlistPage */
   useEffect(() => {
     handleTracksUpdate(id, trackIds);
-    if (playlistId) {
-      getPlaylistTrackIds(playlistId).then((result) => {
-        console.log(trackIds, result);
-        console.log(trackIds.every((value, index) => value === result[index]));
-      });
-    }
-  }, [trackIds, handleTracksUpdate, id, getPlaylistTrackIds, playlistId]);
+  }, [trackIds, id, handleTracksUpdate]);
 
   /* Dragging functionality */
   const addTrackToBucket = (trackId) => {
-    console.log(trackIds);
     setTrackIds((oldTrackIds) => [...oldTrackIds, trackId]);
   };
 
-  const handleRemove = (trackId) => {
+  const handleRemove = (currentId) => {
     setTrackIds((oldTrackIds) => {
-      return oldTrackIds.filter((oldId) => oldId !== trackId);
+      return oldTrackIds.filter((oldId) => oldId !== currentId);
     });
   };
 
@@ -91,8 +85,32 @@ export function Bucket({
     }),
   }));
 
+  const onMoveUp = (trackId) => {
+    const index = trackIds.indexOf(trackId);
+    if (index > 0) {
+      moveTrackLocal(index, index - 1);
+    }
+  };
+
+  const onMoveDown = (trackId) => {
+    const index = trackIds.indexOf(trackId);
+    if (index < trackIds.length - 1) {
+      moveTrackLocal(index, index + 1);
+    }
+  };
+
+  const moveTrackLocal = (prevIndex, newIndex) => {
+    setTrackIds((oldTrackIds) => {
+      const trackIdsCopy = [...oldTrackIds];
+      const currentTrack = trackIdsCopy[prevIndex];
+      trackIdsCopy.splice(prevIndex, 1);
+      trackIdsCopy.splice(newIndex, 0, currentTrack);
+      return trackIdsCopy;
+    });
+  };
+
   return ready ? (
-    <div
+    <Box
       ref={drop}
       id={id}
       className="bucket"
@@ -106,11 +124,13 @@ export function Bucket({
           onPlay={onPlay}
           onPause={onPause}
           handleRemove={handleRemove}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
         />
       ))}
       {trackIds.length === 0 ? <div>Please drop here</div> : null}
-    </div>
+    </Box>
   ) : (
-    <div>Loading...</div>
+    <Box>Loading...</Box>
   );
 }

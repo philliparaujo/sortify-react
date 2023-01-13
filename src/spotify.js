@@ -82,6 +82,10 @@ const genericPut = (request, token, data) => {
   ).then((result) => result.json());
 };
 
+const genericDelete = (request, token) => {
+  return fetch(`${baseURI}/${request}`, baseHeaders("DELETE", token));
+};
+
 /* string (within a Promise) */
 const getDisplayName = (token) => {
   return genericGet(`me`, token).then((result) => result.display_name);
@@ -318,8 +322,12 @@ export function useApi() {
       insert_before: new_index,
       range_length: 1,
     });
-    return genericPut(`playlists/${playlist_id}/tracks`, token, data).then(
-      refreshPlaylists
+    return genericPut(`playlists/${playlist_id}/tracks`, token, data);
+  };
+
+  const deletePlaylist = (playlist_id) => {
+    genericDelete(`playlists/${playlist_id}/followers`, token).then((result) =>
+      refreshPlaylists()
     );
   };
 
@@ -339,6 +347,7 @@ export function useApi() {
         addSongToPlaylist: addSongToPlaylist,
         getTrackById: getTrackById,
         updatePlaylistOrder: updatePlaylistOrder,
+        deletePlaylist: deletePlaylist,
       }
     : {
         isLoggedIn: false,
