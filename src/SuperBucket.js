@@ -4,25 +4,23 @@ import { Bucket } from "./Bucket";
 import { Box } from "@mui/material";
 
 export function SuperBucket({
-  bucketIds,
   handlePlay,
   handlePause,
   getTrackById,
   getPlaylistTrackIds,
   handleTracksUpdate,
+  bucketIds,
+  bucketIdWithPlaylistId,
+  playlistId,
 }) {
   return (
     <Box className="superBucket">
-      {bucketIds.map((id, index) => {
-        if (id && String(id).localeCompare("#") === 0) {
-          return null;
-        }
-
+      {bucketIds.map((id) => {
         return (
           <Bucket
-            key={index}
-            id={index}
-            playlistId={bucketIds[index]}
+            key={id}
+            id={id}
+            playlistId={id == bucketIdWithPlaylistId ? playlistId : undefined}
             getPlaylistTrackIds={getPlaylistTrackIds}
             onPlay={(pauseMe) => handlePlay(pauseMe)}
             onPause={handlePause}

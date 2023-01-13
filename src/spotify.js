@@ -104,6 +104,10 @@ const getEmail = (token) => {
   return genericGet(`me`, token).then((result) => result.email);
 };
 
+const getProfile = (token) => {
+  return genericGet(`me`, token).then((result) => result.external_urls.spotify);
+};
+
 /* array of all playlists (within a Promise) */
 const getPlaylists = (token, user_id) => {
   const getRestPlaylists = (href, token, playlists) => {
@@ -172,6 +176,7 @@ export function useApi() {
   const [name, setName] = useState();
   const [id, setID] = useState();
   const [email, setEmail] = useState();
+  const [profile, setProfile] = useState();
   const [playlists, setPlaylists] = useState();
 
   /* prevents repeated getToken calls to be undefined if hash already deleted */
@@ -197,8 +202,8 @@ export function useApi() {
         }
       });
       getID(token).then((result) => setID(result));
-
       getEmail(token).then((result) => setEmail(result));
+      getProfile(token).then((result) => setProfile(result));
     } else {
       window.localStorage.removeItem("token");
 
@@ -206,6 +211,7 @@ export function useApi() {
       setName(undefined);
       setID(undefined);
       setEmail(undefined);
+      setProfile(undefined);
       setPlaylists(undefined);
     }
   }, [token]);
@@ -337,6 +343,7 @@ export function useApi() {
         name: name,
         id: id,
         email: email,
+        profile: profile,
         playlists: playlists,
         isLoggedIn: window.localStorage.getItem("token") !== null,
         loginExpired: id === undefined,

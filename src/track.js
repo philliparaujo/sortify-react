@@ -198,14 +198,16 @@ export function Track({
         }}
       >
         <IconButton
+          draggable={false}
           onClick={togglePlay}
           disabled={!previewUrl}
-          style={{ color: darkBackground ? "#FFFFFF" : "#000000" }}
+          style={{ color: darkBackground ? "white" : "black" }}
           size="small"
         >
           {playState}
         </IconButton>
         <div
+          draggable={false}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -217,7 +219,11 @@ export function Track({
             disabled={onMoveUp === undefined}
             size="small"
           >
-            <ArrowUpward className="arrows" fontSize="small" />
+            <ArrowUpward
+              className="arrows"
+              fontSize="small"
+              style={{ color: "black" }}
+            />
           </IconButton>
           <IconButton
             onClick={() => onMoveDown(id)}
@@ -225,7 +231,11 @@ export function Track({
             disabled={onMoveUp === undefined}
             size="small"
           >
-            <ArrowDownward className="arrows" fontSize="small" />
+            <ArrowDownward
+              className="arrows"
+              fontSize="small"
+              style={{ color: "black" }}
+            />
           </IconButton>
         </div>
         <audio
@@ -233,7 +243,7 @@ export function Track({
           src={previewUrl}
           type="audio/mp3"
           onEnded={pauseMe}
-          onCanPlayThrough={(e) => {
+          onCanPlay={(e) => {
             e.target.playbackRate = 1.5;
             e.target.volume = 0.05;
           }}
