@@ -11,10 +11,11 @@ export function Bucket({
   onPause,
   getTrackById,
   handleTracksUpdate,
+  speed,
+  volume,
   Track = TrackComponent,
 }) {
   const [trackIds, setTrackIds] = useState([]);
-  const [ready, setReady] = useState(true);
 
   /* on load, fetch trackIds */
   useEffect(() => {
@@ -32,9 +33,6 @@ export function Bucket({
         .then((result) => {
           clearInterval(retryFetch);
           return result;
-        })
-        .then(() => {
-          setReady(true);
         })
         .catch((error) => console.log("ERRORRRRR"));
     };
@@ -109,7 +107,7 @@ export function Bucket({
     });
   };
 
-  return ready ? (
+  return (
     <div
       ref={drop}
       id={id}
@@ -123,14 +121,19 @@ export function Bucket({
           getTrackById={getTrackById}
           onPlay={onPlay}
           onPause={onPause}
+          speed={speed}
+          volume={volume}
           handleRemove={handleRemove}
           onMoveUp={onMoveUp}
           onMoveDown={onMoveDown}
         />
       ))}
-      {trackIds.length === 0 ? <div>Please drop here</div> : null}
+
+      {trackIds.length === 0 && playlistId ? <Box>Loading...</Box> : null}
+
+      {trackIds.length === 0 && !playlistId ? (
+        <Box>Please drop here</Box>
+      ) : null}
     </div>
-  ) : (
-    <Box>Loading...</Box>
   );
 }

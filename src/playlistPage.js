@@ -10,9 +10,15 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Divider,
+  Link,
+  Slider,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useCallback } from "react";
+
+import { SlowMotionVideo, VolumeDown, VolumeUp } from "@mui/icons-material";
 
 export function PlaylistPage({
   playlist,
@@ -20,18 +26,25 @@ export function PlaylistPage({
   getTrackById,
   updatePlaylistOrder,
   deletePlaylist,
+  createPlaylist,
+  addSongToPlaylist,
+  addSongUrisToPlaylist,
 }) {
   const [bucketTracks, setBucketTracks] = useState({}); // hash of buckets & tracks
+  const [originalTracks, setOriginalTracks] = useState([]); // array of all tracks on playlist load
+  const [sortedTracks, setSortedTracks] = useState([]); // array of all tracks
   const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
   const [newId, setNewId] = useState(0);
   const [playlistUpdates, setPlaylistUpdates] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [speed, setSpeed] = useState(1.0);
+  const [volume, setVolume] = useState(0.1);
 
   const id = playlist.id;
   const title = playlist.name;
   const displayName = playlist.owner.display_name;
   const numTracks = playlist.tracks.total;
-  // const url = playlist.external_urls.spotify;
+  const url = playlist.external_urls.spotify;
   // const image = playlist.images;
   // const userId = playlist.owner.id;
 
@@ -72,7 +85,8 @@ export function PlaylistPage({
   useEffect(() => {
     setBucketTracks({});
     setNewId(0);
-  }, [id]);
+    getPlaylistTrackIds(id).then((result) => setOriginalTracks(result));
+  }, [id, getPlaylistTrackIds]);
 
   /* Add bucket if currently no bucket (should only trigger on id change) */
   useEffect(() => {
@@ -80,6 +94,11 @@ export function PlaylistPage({
       addBucket();
     }
   }, [bucketTracks, addBucket]);
+
+  /* Keeps sorted tracks updated */
+  useEffect(() => {
+    setSortedTracks(Object.values(bucketTracks).flat());
+  }, [bucketTracks]);
 
   /* Handling memory of playing songs */
   const handlePlay = (pauseMe) => {
@@ -108,32 +127,54 @@ export function PlaylistPage({
     [setBucketTracks]
   );
 
-  const updatePlaylist = (range_start, insert_before) => {
-    // console.log("PLAYLIST UPDATES", range_start, insert_before);
-
-    if (range_start >= numTracks) {
-      throw new Error("range start too large");
-    }
-    if (insert_before > numTracks) {
-      throw new Error("insert position too large");
-    }
-
-    return updatePlaylistOrder(id, range_start, insert_before);
+  const addSongToNewPlaylist = async (track, playlistId) => {
+    return getTrackById(track)
+      .then((result) => result.name)
+      .then((result) => addSongToPlaylist(playlistId, result))
+      .then(console.log("DONE", track));
   };
 
-  const saveSongs = () => {
-    const sortedTracks = Object.values(bucketTracks)
-      .flat()
-      .filter((track) => track.localeCompare("#") !== 0);
+  async function updatePlaylist(sortedTracks) {
+    createPlaylist(`${title} copy`).then(async (result) => {
+      const playlistId = result.id;
 
-    console.log(sortedTracks);
+      // for (const track of sortedTracks) {
+      //   await addSongToNewPlaylist(track, playlistId);
+      // }
+      addSongUrisToPlaylist(id, sortedTracks);
+    });
+  }
+
+  const saveSongs = () => {
+    updatePlaylist(sortedTracks);
+  };
+
+  const areArraysEqual = (array1, array2) => {
+    if (array1.length !== array2.length) {
+      return false;
+    }
+    for (let i = 0; i < array1.length; i++) {
+      if (array1[i].localeCompare(array2[i]) !== 0) {
+        return false;
+      }
+    }
+    return true;
   };
 
   return (
     <Box>
-      <Typography variant="h3" sx={{ fontWeight: "medium" }}>
-        {title}
-      </Typography>
+      <Tooltip title="Open in Spotify" placement="bottom" followCursor>
+        <Link
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="h3"
+          sx={{ fontWeight: "medium" }}
+        >
+          {title}
+        </Link>
+      </Tooltip>
+
       <Typography variant="h6">{displayName}</Typography>
 
       <Box>
@@ -144,7 +185,12 @@ export function PlaylistPage({
         >
           Delete playlist
         </Button>
-        <Button variant="contained" color="secondary" onClick={saveSongs}>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={saveSongs}
+          disabled={areArraysEqual(originalTracks, sortedTracks)}
+        >
           Save
         </Button>
       </Box>
@@ -156,6 +202,57 @@ export function PlaylistPage({
           Remove empty bucket
         </Button>
       </Box>
+
+      <div style={{ display: "inline-flex", flexDirection: "row" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: 4,
+            paddingRight: 16,
+          }}
+        >
+          <Tooltip title="Playback speed">
+            <SlowMotionVideo />
+          </Tooltip>
+
+          <Slider
+            defaultValue={1.0}
+            step={0.25}
+            marks
+            min={0.5}
+            max={2.0}
+            value={speed}
+            sx={{ width: 200 }}
+            onChange={(e) => setSpeed(e.target.value)}
+            valueLabelDisplay="auto"
+          />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: 4,
+            paddingLeft: 16,
+          }}
+        >
+          <Tooltip title="Volume">
+            <VolumeDown />
+          </Tooltip>
+
+          <Slider
+            defaultValue={0.1}
+            step={0.01}
+            min={0}
+            max={0.5}
+            value={volume}
+            sx={{ width: 200 }}
+            onChange={(e) => setVolume(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <Divider />
 
       {/* Delete playlist dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
@@ -185,6 +282,8 @@ export function PlaylistPage({
         bucketIds={Object.keys(bucketTracks)}
         bucketIdWithPlaylistId={bucketIdWithPlaylistId}
         playlistId={id}
+        speed={speed}
+        volume={volume}
       ></SuperBucket>
     </Box>
   );

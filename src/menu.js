@@ -47,6 +47,7 @@ export function Menu({
       <AppBar position="static">
         <Toolbar>
           <IconButton
+            disabled={!isLoggedIn}
             onClick={() => setVisible((prev) => !prev)}
             size="large"
             edge="start"

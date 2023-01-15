@@ -12,6 +12,8 @@ export function SuperBucket({
   bucketIds,
   bucketIdWithPlaylistId,
   playlistId,
+  speed,
+  volume,
 }) {
   return (
     <Box className="superBucket">
@@ -26,6 +28,8 @@ export function SuperBucket({
             onPause={handlePause}
             getTrackById={getTrackById}
             handleTracksUpdate={handleTracksUpdate}
+            speed={speed}
+            volume={volume}
           />
         );
       })}
