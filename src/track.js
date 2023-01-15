@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { useDrag } from "react-dnd";
 import "./App.css";
 
-import { Box, IconButton, Typography } from "@mui/material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import {
   ArrowUpward,
   ArrowDownward,
@@ -12,13 +12,15 @@ import {
 } from "@mui/icons-material";
 
 export function Track({
-  id,
+  id, // of the track
   getTrackById,
-  onPlay,
-  onPause,
+  onPlay, // callback for when user clicks the play button
+  onPause, // callback for when user clicks the pause button
   handleRemove,
   onMoveUp,
   onMoveDown,
+  speed,
+  volume,
 }) {
   const [darkBackground, setDarkBackground] = useState(true);
 
@@ -31,7 +33,7 @@ export function Track({
   const [name, setName] = useState();
   const [imageUrl, setImageUrl] = useState();
   const [previewUrl, setPreviewUrl] = useState();
-  // const [artists, setArtists] = useState();
+  const [artists, setArtists] = useState("");
   // const [durationMs, setDurationMs] = useState();
   // const [explicit, setExplicit] = useState();
 
@@ -45,6 +47,7 @@ export function Track({
             setImageUrl(result.album.images[0].url);
           }
           setPreviewUrl(result.preview_url);
+          setArtists(result.artists.map((artist) => " " + artist.name));
           return result;
         })
         .then(() => {
@@ -66,7 +69,12 @@ export function Track({
     return () => {
       clearInterval(retryFetch);
     };
-  }, [id, getTrackById]);
+  }, [id, getTrackById, speed, volume]);
+
+  useEffect(() => {
+    audioRef.current.playbackRate = speed;
+    audioRef.current.volume = volume;
+  }, [speed, volume]);
 
   /* Handles playing/pausing audio */
   const pauseMe = () => {
@@ -105,13 +113,11 @@ export function Track({
       playMe();
     } else {
       pauseMe();
-    }
 
-    // correctly plays song if paused by onEnded
-    if (onPause) {
-      onPause(() => {
-        playMe();
-      });
+      // correctly plays song if paused by onEnded
+      if (onPause) {
+        onPause();
+      }
     }
   };
 
@@ -201,7 +207,14 @@ export function Track({
           draggable={false}
           onClick={togglePlay}
           disabled={!previewUrl}
-          style={{ color: darkBackground ? "white" : "black" }}
+          style={{
+            color:
+              !previewUrl && divRef.current
+                ? divRef.current.style.backgroundColor
+                : darkBackground
+                ? "white"
+                : "black",
+          }}
           size="small"
         >
           {playState}
@@ -244,7 +257,7 @@ export function Track({
           type="audio/mp3"
           onEnded={pauseMe}
           onCanPlay={(e) => {
-            e.target.playbackRate = 1.5;
+            e.target.playbackRate = speed;
             e.target.volume = 0.05;
           }}
         ></audio>
@@ -256,13 +269,15 @@ export function Track({
           draggable="false"
           onLoad={(e) => setTrackStyle(e.target)}
         ></img>
-        <Typography
-          id="title"
-          draggable="false"
-          sx={{ color: darkBackground ? "#FFFFFF" : "#000000" }}
-        >
-          {name}
-        </Typography>
+        <Tooltip title={artists.toString()} placement="top" followCursor>
+          <Typography
+            id="title"
+            draggable="false"
+            sx={{ color: darkBackground ? "#FFFFFF" : "#000000" }}
+          >
+            {name}
+          </Typography>
+        </Tooltip>
       </Box>
     </div>
   );

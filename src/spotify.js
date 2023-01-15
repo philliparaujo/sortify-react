@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 
+const siteRoot = new URL(document.location);
+// siteRoot.pathname = "";
+// siteRoot.search = "";
+// siteRoot.hash = "";
+console.log(siteRoot);
+
 /* Log-in info
  */
 const authInfo = {
   CLIENT_ID: "4e395fc704b74c3dafb22621444b1e64",
-  REDIRECT_URI: "http://localhost:3000",
+  REDIRECT_URI: siteRoot.href,
   AUTH_ENDPOINT: "https://accounts.spotify.com/authorize",
   RESPONSE_TYPE: "token",
   SCOPES: [
@@ -272,10 +278,11 @@ export function useApi() {
       })
       .then(() => {
         return firstTracks.concat(restTracks.reverse()).flat();
-      });
+      })
+      .then((result) => result.filter((track) => track !== null));
   };
 
-  /* post public playlist request w/o description */
+  /* return new public playlist (within a Promise) */
   const createPlaylist = (title) => {
     if (!authInfo.SCOPES.includes("playlist-modify-public")) {
       throw new Error("No permission to modify public playlists!");
@@ -290,10 +297,15 @@ export function useApi() {
       public: true,
     });
 
-    genericPost(`users/${id}/playlists`, token, data).then((result) => {
-      refreshPlaylists();
-      return result;
-    });
+    return genericPost(`users/${id}/playlists`, token, data)
+      .then((result) => {
+        refreshPlaylists();
+        return result;
+      })
+      .then((result) => {
+        console.log(result);
+        return result;
+      });
   };
 
   /* add song matching search bar to playlist */
@@ -301,7 +313,7 @@ export function useApi() {
     if (!playlist_id) {
       return;
     }
-    searchByTitle(title, token)
+    return searchByTitle(title, token)
       .then((result) => getTrackById(result[0]))
       .then((result) => {
         console.log(result);
@@ -314,6 +326,21 @@ export function useApi() {
           refreshPlaylists
         );
       });
+  };
+
+  const addSongUrisToPlaylist = async (playlist_id, sortedTrackIds) => {
+    const uris = await Promise.all(
+      sortedTrackIds.map((trackId) =>
+        getTrackById(trackId).then((result) => result.uri)
+      )
+    );
+    console.log(uris);
+    console.log("DONE");
+    const data = JSON.stringify({ uris: uris, position: 0 });
+
+    genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
+      refreshPlaylists
+    );
   };
 
   /* track information from id (within a Promise) */
@@ -355,6 +382,7 @@ export function useApi() {
         getTrackById: getTrackById,
         updatePlaylistOrder: updatePlaylistOrder,
         deletePlaylist: deletePlaylist,
+        addSongUrisToPlaylist: addSongUrisToPlaylist,
       }
     : {
         isLoggedIn: false,

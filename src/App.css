@@ -22,14 +22,7 @@ body {
   flex: 1;
 }
 
-/* Header */
-
 /* Playlist Page */
-.content {
-  width: 100%;
-  display: inline-block;
-}
-
 .superBucket {
   display: flex;
   flex-direction: row;

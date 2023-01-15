@@ -1,5 +1,9 @@
 # sortify-react
 
+## Demo
+
+[Demo: See the app live](https://philliparaujo.github.io/sortify-react/)
+
 ## Functionalty
 - Displays Spotify user profile, playlists, and songs within them
 - Ability to rearrange songs
