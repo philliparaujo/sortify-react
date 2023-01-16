@@ -16,6 +16,7 @@ export function Bucket({
   Track = TrackComponent,
 }) {
   const [trackIds, setTrackIds] = useState([]);
+  const [idsFetched, setIdsFetched] = useState(false);
 
   /* on load, fetch trackIds */
   useEffect(() => {
@@ -28,6 +29,7 @@ export function Bucket({
       getPlaylistTrackIds(playlistId)
         .then((result) => {
           setTrackIds(result);
+          setIdsFetched(true);
           return result;
         })
         .then((result) => {
@@ -129,9 +131,11 @@ export function Bucket({
         />
       ))}
 
-      {trackIds.length === 0 && playlistId ? <Box>Loading...</Box> : null}
-
-      {trackIds.length === 0 && !playlistId ? (
+      {playlistId && !idsFetched ? <Box>Loading...</Box> : null}
+      {playlistId && idsFetched && trackIds.length === 0 ? (
+        <Box>Please drop here</Box>
+      ) : null}
+      {!playlistId && trackIds.length === 0 ? (
         <Box>Please drop here</Box>
       ) : null}
     </div>
