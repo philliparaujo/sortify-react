@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useCallback } from "react";
 import { useDrag } from "react-dnd";
 import "./App.css";
 
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import {
-  ArrowUpward,
   ArrowDownward,
-  PlayArrow,
+  ArrowUpward,
   Pause,
+  PlayArrow,
 } from "@mui/icons-material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 
 export function Track({
   id, // of the track
