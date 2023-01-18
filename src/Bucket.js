@@ -1,7 +1,7 @@
+import { Box } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { Track as TrackComponent } from "./track";
 import { useDrop } from "react-dnd";
-import { Box, CssBaseline } from "@mui/material";
+import { Track as TrackComponent } from "./track";
 
 export function Bucket({
   id,

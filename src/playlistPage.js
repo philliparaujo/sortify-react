@@ -18,13 +18,12 @@ import {
 } from "@mui/material";
 import { useCallback } from "react";
 
-import { SlowMotionVideo, VolumeDown, VolumeUp } from "@mui/icons-material";
+import { SlowMotionVideo, VolumeDown } from "@mui/icons-material";
 
 export function PlaylistPage({
   playlist,
   getPlaylistTrackIds,
   getTrackById,
-  updatePlaylistOrder,
   deletePlaylist,
   createPlaylist,
   addSongToPlaylist,
@@ -35,7 +34,6 @@ export function PlaylistPage({
   const [sortedTracks, setSortedTracks] = useState([]); // array of all tracks
   const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
   const [newId, setNewId] = useState(0);
-  const [playlistUpdates, setPlaylistUpdates] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [speed, setSpeed] = useState(1.0);
   const [volume, setVolume] = useState(0.1);
@@ -43,8 +41,8 @@ export function PlaylistPage({
   const id = playlist.id;
   const title = playlist.name;
   const displayName = playlist.owner.display_name;
-  const numTracks = playlist.tracks.total;
   const url = playlist.external_urls.spotify;
+  // const numTracks = playlist.tracks.total;
   // const image = playlist.images;
   // const userId = playlist.owner.id;
 
@@ -127,27 +125,11 @@ export function PlaylistPage({
     [setBucketTracks]
   );
 
-  const addSongToNewPlaylist = async (track, playlistId) => {
-    return getTrackById(track)
-      .then((result) => result.name)
-      .then((result) => addSongToPlaylist(playlistId, result))
-      .then(console.log("DONE", track));
-  };
-
-  async function updatePlaylist(sortedTracks) {
-    createPlaylist(`${title} copy`).then(async (result) => {
-      const playlistId = result.id;
-
-      // for (const track of sortedTracks) {
-      //   await addSongToNewPlaylist(track, playlistId);
-      // }
-      addSongUrisToPlaylist(id, sortedTracks);
-    });
+  async function generateSortedPlaylist(sortedTracks) {
+    createPlaylist(`[sorted] ${title}`).then(async (result) =>
+      addSongUrisToPlaylist(result.id, sortedTracks)
+    );
   }
-
-  const saveSongs = () => {
-    updatePlaylist(sortedTracks);
-  };
 
   const areArraysEqual = (array1, array2) => {
     if (array1.length !== array2.length) {
@@ -188,7 +170,9 @@ export function PlaylistPage({
         <Button
           variant="contained"
           color="secondary"
-          onClick={saveSongs}
+          onClick={() => {
+            generateSortedPlaylist(sortedTracks);
+          }}
           disabled={areArraysEqual(originalTracks, sortedTracks)}
         >
           Save
