@@ -55,7 +55,6 @@ export function App() {
   // TODO: handle errors for: not being on dev group
   // not being added to redirect uris on spotify dev page
   // charAt error on first login (fixed?), fix siteRoot stuff (fixed?)
-  // fix playing same song after 30 seconds
 
   return (
     <ThemeProvider theme={theme}>

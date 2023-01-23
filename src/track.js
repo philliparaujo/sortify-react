@@ -57,6 +57,10 @@ export function Track({
     audioRef.current.volume = volume;
   }, [speed, volume]);
 
+  useEffect(() => {
+    console.log(playing);
+  }, [playing]);
+
   /* Handles playing/pausing audio */
   const pauseMe = () => {
     if (!audioRef.current) {
@@ -66,6 +70,11 @@ export function Track({
     audioRef.current.pause();
     setPlaying(undefined);
     setPlayState(<PlayArrow />);
+
+    // correctly plays song if paused by onEnded
+    if (onPause) {
+      onPause();
+    }
   };
 
   const playMe = () => {
@@ -94,11 +103,6 @@ export function Track({
       playMe();
     } else {
       pauseMe();
-
-      // correctly plays song if paused by onEnded
-      if (onPause) {
-        onPause();
-      }
     }
   };
 
