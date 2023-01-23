@@ -20,6 +20,7 @@ export function Track({
   onMoveDown,
   speed,
   volume,
+  fastMode,
 }) {
   const [darkBackground, setDarkBackground] = useState(true);
 
@@ -38,36 +39,17 @@ export function Track({
 
   /* on load, fetch track id info */
   useEffect(() => {
-    const fetch = () => {
-      getTrackById(id)
-        .then((result) => {
-          setName(result.name);
-          if (result.album.images && result.album.images.length > 0) {
-            setImageUrl(result.album.images[0].url);
-          }
-          setPreviewUrl(result.preview_url);
-          setArtists(result.artists.map((artist) => " " + artist.name));
-          return result;
-        })
-        .then(() => {
-          clearInterval(retryFetch);
-        })
-        .catch((error) => console.log("ERRRRRRORRRRRRR"));
-    };
-
-    // first fetch attempt
-    fetch();
-
-    // if error on fetch (too many API calls), retry until successful
-    var retryFetch = setInterval(() => {
-      console.log("OH NO");
-      fetch();
-    }, 1000);
-
-    // on component unmount
-    return () => {
-      clearInterval(retryFetch);
-    };
+    getTrackById(id)
+      .then((result) => {
+        setName(result.name);
+        if (result.album.images && result.album.images.length > 0) {
+          setImageUrl(result.album.images[0].url);
+        }
+        setPreviewUrl(result.preview_url);
+        setArtists(result.artists.map((artist) => " " + artist.name));
+        return result;
+      })
+      .catch((error) => console.log(error));
   }, [id, getTrackById, speed, volume]);
 
   useEffect(() => {
@@ -266,7 +248,9 @@ export function Track({
           width="40"
           height="40"
           draggable="false"
-          onLoad={(e) => setTrackStyle(e.target)}
+          onLoad={(e) => {
+            if (!fastMode) setTrackStyle(e.target);
+          }}
         ></img>
         <Tooltip title={artists.toString()} placement="top" followCursor>
           <Typography

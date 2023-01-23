@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { NavBarVisible, PlaylistIndex } from "./App.js";
+import { NavBarVisible, PlaylistIndex, FastMode } from "./App.js";
 
 import {
   Box,
@@ -9,6 +9,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Switch,
   TextField,
 } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
@@ -24,9 +25,11 @@ export function NavBar({
 }) {
   const { visible } = useContext(NavBarVisible);
   const { setPlaylistIndex } = useContext(PlaylistIndex);
+  const { fastMode, setFastMode } = useContext(FastMode);
   const [lastPlaylistId, setLastPlaylistId] = useState(undefined);
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [newSongInput, setNewSongInput] = useState("");
+  // const [checked, setChecked] = useState(true);
 
   useEffect(() => {
     if (lastPlaylistId && selectedPlaylist) {
@@ -121,6 +124,13 @@ export function NavBar({
                 value={newSongInput}
                 onChange={(e) => setNewSongInput(e.target.value)}
               />
+            </ListItem>
+            <ListItem key={"H5"} disablePadding>
+              <Switch
+                checked={fastMode}
+                onChange={(e) => setFastMode(e.target.checked)}
+              />
+              <ListItemText>Fast mode</ListItemText>
             </ListItem>
           </List>
 

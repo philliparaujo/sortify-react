@@ -26,8 +26,8 @@ export function PlaylistPage({
   getTrackById,
   deletePlaylist,
   createPlaylist,
-  addSongToPlaylist,
   addSongUrisToPlaylist,
+  fastMode,
 }) {
   const [bucketTracks, setBucketTracks] = useState({}); // hash of buckets & tracks
   const [originalTracks, setOriginalTracks] = useState([]); // array of all tracks on playlist load
@@ -268,6 +268,7 @@ export function PlaylistPage({
         playlistId={id}
         speed={speed}
         volume={volume}
+        fastMode={fastMode}
       ></SuperBucket>
     </Box>
   );

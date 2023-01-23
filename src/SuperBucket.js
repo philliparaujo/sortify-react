@@ -14,6 +14,7 @@ export function SuperBucket({
   playlistId,
   speed,
   volume,
+  fastMode,
 }) {
   return (
     <Box className="superBucket">
@@ -30,6 +31,7 @@ export function SuperBucket({
             handleTracksUpdate={handleTracksUpdate}
             speed={speed}
             volume={volume}
+            fastMode={fastMode}
           />
         );
       })}

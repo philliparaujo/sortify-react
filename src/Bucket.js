@@ -14,44 +14,24 @@ export function Bucket({
   speed,
   volume,
   Track = TrackComponent,
+  fastMode,
 }) {
   const [trackIds, setTrackIds] = useState([]);
   const [idsFetched, setIdsFetched] = useState(false);
 
   /* on load, fetch trackIds */
   useEffect(() => {
-    const fetch = () => {
-      if (!playlistId) {
-        clearInterval(retryFetch);
-        return;
-      }
+    if (!playlistId) {
+      return;
+    }
 
-      getPlaylistTrackIds(playlistId)
-        .then((result) => {
-          setTrackIds(result);
-          setIdsFetched(true);
-          return result;
-        })
-        .then((result) => {
-          clearInterval(retryFetch);
-          return result;
-        })
-        .catch((error) => console.log("ERRORRRRR"));
-    };
-
-    // first fetch attempt
-    fetch();
-
-    // if error on fetch (too many API calls), retry until successful
-    var retryFetch = setInterval(() => {
-      console.log("RETRYING playlist fetch");
-      fetch();
-    }, 1000);
-
-    // on component unmount
-    return () => {
-      clearInterval(retryFetch);
-    };
+    getPlaylistTrackIds(playlistId)
+      .then((result) => {
+        setTrackIds(result);
+        setIdsFetched(true);
+        return result;
+      })
+      .catch((error) => console.log(error));
   }, [getPlaylistTrackIds, playlistId]);
 
   /* on track id update, update tracks for playlistPage */
@@ -128,6 +108,7 @@ export function Bucket({
           handleRemove={handleRemove}
           onMoveUp={onMoveUp}
           onMoveDown={onMoveDown}
+          fastMode={fastMode}
         />
       ))}
 

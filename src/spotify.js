@@ -239,44 +239,90 @@ export function useApi() {
   };
 
   /* array of track ids from a playlist (within a Promise) */
+  // const getPlaylistTrackIds = (playlist_id) => {
+  //   if (!playlist_id) {
+  //     return;
+  //   }
+  //   const getRestTrackIds = (href, token, tracks) => {
+  //     return fetch(href, baseHeaders("GET", token))
+  //       .then((result) => result.json())
+  //       .then((result) => {
+  //         // if last page
+  //         if (!result.next) {
+  //           return result.items.map((item) => item.track.id);
+  //         }
+  //         // combine current page with last page
+  //         return fetch(result.next, baseHeaders("GET", token))
+  //           .then((result2) => result2.json())
+  //           .then((result2) => result2.href)
+  //           .then((result2) => getRestTrackIds(result2, token, tracks))
+  //           .then((finishedResult2) => {
+  //             tracks.push(finishedResult2);
+  //             return result.items.map((item) => item.track.id);
+  //           });
+  //       });
+  //   };
+  //   var firstTracks = [];
+  //   var restTracks = [];
+  //   return genericGet(`playlists/${playlist_id}`, token)
+  //     .then((result) => result.tracks)
+  //     .then((result) => {
+  //       firstTracks.push(result.items.map((item) => item.track.id));
+  //       return getRestTrackIds(result.href, token, restTracks);
+  //     })
+  //     .then(() => {
+  //       return firstTracks.concat(restTracks.reverse()).flat();
+  //     })
+  //     .then((result) => result.filter((track) => track !== null));
+  // };
+
   const getPlaylistTrackIds = (playlist_id) => {
     if (!playlist_id) {
       return;
     }
-    const getRestTrackIds = (href, token, tracks) => {
-      return fetch(href, baseHeaders("GET", token))
-        .then((result) => result.json())
-        .then((result) => {
-          // if last page
-          if (!result.next) {
-            return result.items.map((item) => item.track.id);
-          }
 
-          // combine current page with last page
-          return fetch(result.next, baseHeaders("GET", token))
-            .then((result2) => result2.json())
-            .then((result2) => result2.href)
-            .then((result2) => getRestTrackIds(result2, token, tracks))
-            .then((finishedResult2) => {
-              tracks.push(finishedResult2);
-              return result.items.map((item) => item.track.id);
-            });
-        });
-    };
+    // declare array
+    var allTracks = [];
+    var returnStatement;
 
-    var firstTracks = [];
-    var restTracks = [];
-
+    // get href
     return genericGet(`playlists/${playlist_id}`, token)
       .then((result) => result.tracks)
-      .then((result) => {
-        firstTracks.push(result.items.map((item) => item.track.id));
-        return getRestTrackIds(result.href, token, restTracks);
+      .then(async (result) => {
+        var href = result.href;
+        var done = false;
+
+        while (!done) {
+          // fetch tracks using href
+          returnStatement = await fetch(href, baseHeaders("GET", token))
+            .then((result) => result.json())
+            .then((result) => {
+              // push .items onto result
+              var trackIds = result.items.map((item) => item.track.id);
+              for (var id of trackIds) {
+                allTracks.push(id);
+              }
+
+              if (!result.next) {
+                done = true;
+                return allTracks;
+              } else {
+                href = result.next;
+              }
+            })
+            .catch((error) => {
+              console.log(error);
+              return;
+            });
+        }
+
+        // return array
+        return returnStatement;
       })
-      .then(() => {
-        return firstTracks.concat(restTracks.reverse()).flat();
-      })
-      .then((result) => result.filter((track) => track !== null));
+      .catch((error) => {
+        console.log(error);
+        return;
+      });
   };
 
   /* return new public playlist (within a Promise) */
@@ -294,15 +340,10 @@ export function useApi() {
       public: true,
     });
 
-    return genericPost(`users/${id}/playlists`, token, data)
-      .then((result) => {
-        refreshPlaylists();
-        return result;
-      })
-      .then((result) => {
-        console.log(result);
-        return result;
-      });
+    return genericPost(`users/${id}/playlists`, token, data).then((result) => {
+      refreshPlaylists();
+      return result;
+    });
   };
 
   /* add song matching search bar to playlist */
@@ -313,7 +354,6 @@ export function useApi() {
     return searchByTitle(title, token)
       .then((result) => getTrackById(result[0]))
       .then((result) => {
-        console.log(result);
         const numSongs = getPlaylistTrackIds(playlist_id).length;
         const data = JSON.stringify({
           uris: [result.uri],
@@ -331,10 +371,8 @@ export function useApi() {
         getTrackById(trackId).then((result) => result.uri)
       )
     );
-    console.log(uris);
-    console.log("DONE");
 
-    const maxSongs = 20;
+    const maxSongs = 100;
     const uriIntervals = []; // segments of uris, lengths based on maxSongs
 
     for (let i = 0; i < uris.length / maxSongs; i++) {
@@ -372,7 +410,8 @@ export function useApi() {
         email: email,
         profile: profile,
         playlists: playlists,
-        isLoggedIn: window.localStorage.getItem("token") !== null,
+        isLoggedIn:
+          window.localStorage.getItem("token") !== null && name !== undefined,
         loginExpired: id === undefined,
         logout: () => setToken(undefined),
         refreshPlaylists: refreshPlaylists,
