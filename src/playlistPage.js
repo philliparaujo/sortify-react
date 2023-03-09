@@ -137,11 +137,7 @@ export function PlaylistPage({
   async function updatePlaylist(sortedTracks) {
     createPlaylist(`${title} copy`).then(async (result) => {
       const playlistId = result.id;
-
-      // for (const track of sortedTracks) {
-      //   await addSongToNewPlaylist(track, playlistId);
-      // }
-      addSongUrisToPlaylist(id, sortedTracks);
+      addSongUrisToPlaylist(playlistId, sortedTracks);
     });
   }
 

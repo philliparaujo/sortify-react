@@ -21,7 +21,6 @@ export function Bucket({
   useEffect(() => {
     const fetch = () => {
       if (!playlistId) {
-        clearInterval(retryFetch);
         return;
       }
 
@@ -31,25 +30,15 @@ export function Bucket({
           return result;
         })
         .then((result) => {
-          clearInterval(retryFetch);
           return result;
         })
-        .catch((error) => console.log("ERRORRRRR"));
+        .catch((error) => {
+          console.log("ERRORRRRR");
+          fetch();
+        });
     };
 
-    // first fetch attempt
     fetch();
-
-    // if error on fetch (too many API calls), retry until successful
-    var retryFetch = setInterval(() => {
-      console.log("RETRYING playlist fetch");
-      fetch();
-    }, 1000);
-
-    // on component unmount
-    return () => {
-      clearInterval(retryFetch);
-    };
   }, [getPlaylistTrackIds, playlistId]);
 
   /* on track id update, update tracks for playlistPage */
@@ -63,6 +52,10 @@ export function Bucket({
   };
 
   const handleRemove = (currentId) => {
+    const index = trackIds.indexOf(currentId);
+    if (index < trackIds.length - 1) {
+      moveTrackLocal(index, trackIds.length - 1);
+    }
     setTrackIds((oldTrackIds) => {
       return oldTrackIds.filter((oldId) => oldId !== currentId);
     });

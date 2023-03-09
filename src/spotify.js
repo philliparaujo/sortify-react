@@ -6,11 +6,14 @@ const siteRoot = new URL(document.location);
 // siteRoot.hash = "";
 console.log(siteRoot);
 
+/* to prevent repeat id fetching */
+var songCache = {};
+
 /* Log-in info
  */
 const authInfo = {
   CLIENT_ID: "4e395fc704b74c3dafb22621444b1e64",
-  REDIRECT_URI: siteRoot.href,
+  REDIRECT_URI: siteRoot.origin,
   AUTH_ENDPOINT: "https://accounts.spotify.com/authorize",
   RESPONSE_TYPE: "token",
   SCOPES: [
@@ -345,7 +348,15 @@ export function useApi() {
 
   /* track information from id (within a Promise) */
   const getTrackById = (song_id) => {
-    return genericGet(`tracks/${song_id}`, token);
+    var cache = songCache[song_id];
+    if (cache) {
+      return cache;
+    }
+
+    var result = genericGet(`tracks/${song_id}`, token);
+    songCache[song_id] = result;
+
+    return result;
   };
 
   /* Updates order of song in playlist, returns snapshot id (within a Promise) */

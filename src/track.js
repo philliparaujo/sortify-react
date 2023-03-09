@@ -2,14 +2,23 @@ import React, { useEffect, useState } from "react";
 import { useCallback } from "react";
 import { useDrag } from "react-dnd";
 import "./App.css";
-
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import {
   ArrowUpward,
   ArrowDownward,
   PlayArrow,
   Pause,
 } from "@mui/icons-material";
+import { useLayoutEffect } from "react";
+
+var colorCache = {};
+var songCache = {};
 
 export function Track({
   id, // of the track
@@ -24,7 +33,6 @@ export function Track({
 }) {
   const [darkBackground, setDarkBackground] = useState(true);
 
-  const [playState, setPlayState] = useState(<PlayArrow />);
   const [playing, setPlaying] = useState(false);
 
   const divRef = React.useRef();
@@ -39,66 +47,55 @@ export function Track({
 
   /* on load, fetch track id info */
   useEffect(() => {
+    const applyTrackInfo = (trackInfo) => {
+      if (!trackInfo) {
+        return;
+      }
+
+      setName(trackInfo.name);
+      if (trackInfo.album.images && trackInfo.album.images.length > 0) {
+        setImageUrl(trackInfo.album.images[0].url);
+      }
+      setPreviewUrl(trackInfo.preview_url);
+      setArtists(trackInfo.artists.map((artist) => " " + artist.name));
+    };
+
     const fetch = () => {
-      getTrackById(id)
-        .then((result) => {
-          setName(result.name);
-          if (result.album.images && result.album.images.length > 0) {
-            setImageUrl(result.album.images[0].url);
-          }
-          setPreviewUrl(result.preview_url);
-          setArtists(result.artists.map((artist) => " " + artist.name));
-          return result;
-        })
-        .then(() => {
-          clearInterval(retryFetch);
-        })
-        .catch((error) => console.log("ERRRRRRORRRRRRR"));
+      var trackInfo = songCache[id];
+      if (!trackInfo) {
+        getTrackById(id)
+          .then((result) => {
+            console.log("fetching");
+            songCache[id] = result;
+
+            applyTrackInfo(result);
+            return result;
+          })
+          .then(() => {})
+          .catch((error) => {
+            console.log("ERRRRRRORRRRRRR");
+            fetch();
+          });
+      } else {
+        applyTrackInfo(trackInfo);
+      }
     };
 
-    // first fetch attempt
     fetch();
-
-    // if error on fetch (too many API calls), retry until successful
-    var retryFetch = setInterval(() => {
-      console.log("OH NO");
-      fetch();
-    }, 1000);
-
-    // on component unmount
-    return () => {
-      clearInterval(retryFetch);
-    };
-  }, [id, getTrackById, speed, volume]);
-
-  useEffect(() => {
-    audioRef.current.playbackRate = speed;
-    audioRef.current.volume = volume;
-  }, [speed, volume]);
+  }, [id, getTrackById]);
 
   /* Handles playing/pausing audio */
   const pauseMe = () => {
-    if (!audioRef.current) {
-      return;
-    }
+    setPlaying(false);
 
-    audioRef.current.pause();
-    setPlaying(undefined);
-    setPlayState(<PlayArrow />);
+    // correctly plays song if paused by onEnded
+    if (onPause) {
+      onPause();
+    }
   };
 
   const playMe = () => {
-    if (!audioRef.current) {
-      return;
-    }
-
-    var playPromise = audioRef.current.play();
-    playPromise
-      .then(() => {
-        setPlaying(id);
-        setPlayState(<Pause />);
-      })
-      .catch((error) => console.log(error));
+    setPlaying(true);
 
     // pauses other track previews
     if (onPlay) {
@@ -109,17 +106,35 @@ export function Track({
   };
 
   const togglePlay = () => {
-    if (playing === undefined || audioRef.current.paused) {
+    if (!playing) {
       playMe();
     } else {
       pauseMe();
-
-      // correctly plays song if paused by onEnded
-      if (onPause) {
-        onPause();
-      }
     }
   };
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (playing) {
+        audioRef.current.src = previewUrl;
+        audioRef.current.play();
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [playing, previewUrl]);
+
+  useEffect(() => {
+    if (playing && audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [playing, volume]);
+
+  useEffect(() => {
+    if (playing && audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+  }, [playing, speed]);
 
   /* Colors tracks, sets up play button and audio on load */
   const getAverageRGB = (img) => {
@@ -128,7 +143,6 @@ export function Track({
     img.setAttribute("crossOrigin", "");
 
     var blockSize = 5, // only visit every 5 pixels
-      defaultRGB = { r: 0, g: 0, b: 0 }, // for non-supporting envs
       canvas = document.createElement("canvas"),
       context = canvas.getContext && canvas.getContext("2d"),
       data,
@@ -138,9 +152,6 @@ export function Track({
       length,
       rgb = { r: 0, g: 0, b: 0 },
       count = 0;
-    if (!context) {
-      return defaultRGB;
-    }
 
     height = canvas.height =
       img.naturalHeight || img.offsetHeight || img.height;
@@ -165,15 +176,21 @@ export function Track({
   };
 
   const setTrackStyle = (img) => {
-    const RGB = getAverageRGB(img);
-    divRef.current.style.backgroundColor = `rgb(${RGB.r},${RGB.g},${RGB.b})`;
+    var rgb = colorCache[img.src];
+    if (rgb === undefined) {
+      rgb = getAverageRGB(img);
+      if (JSON.stringify(rgb) !== JSON.stringify({ r: 0, g: 0, b: 0 })) {
+        colorCache[img.src] = rgb;
+      }
+    }
+
+    divRef.current.style.backgroundColor = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
 
     const relativeLuminance =
-      0.2126 * RGB.r ** 2.2 + 0.7152 * RGB.g ** 2.2 + 0.0722 * RGB.b ** 2.2;
+      0.2126 * rgb.r ** 2.2 + 0.7152 * rgb.g ** 2.2 + 0.0722 * rgb.b ** 2.2;
 
     if (relativeLuminance > 100000) {
       setDarkBackground(false);
-      setPlayState(<PlayArrow />);
     }
   };
 
@@ -217,7 +234,7 @@ export function Track({
           }}
           size="small"
         >
-          {playState}
+          {playing ? <Pause /> : <PlayArrow />}
         </IconButton>
         <div
           draggable={false}
@@ -253,14 +270,13 @@ export function Track({
         </div>
         <audio
           ref={audioRef}
-          src={previewUrl}
           type="audio/mp3"
           onEnded={pauseMe}
           onCanPlay={(e) => {
             e.target.playbackRate = speed;
-            e.target.volume = 0.05;
+            e.target.volume = volume;
           }}
-        ></audio>
+        />
         <img
           src={imageUrl}
           alt=""
