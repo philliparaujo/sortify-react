@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 
 const siteRoot = new URL(document.location);
-// siteRoot.pathname = "";
-// siteRoot.search = "";
-// siteRoot.hash = "";
 console.log(siteRoot);
 
 /* to prevent repeat id fetching */
@@ -339,11 +336,24 @@ export function useApi() {
     );
     console.log(uris);
     console.log("DONE");
-    const data = JSON.stringify({ uris: uris, position: 0 });
 
-    genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
-      refreshPlaylists
-    );
+    const maxSongs = 20;
+    const uriIntervals = []; // segments of uris, lengths based on maxSongs
+
+    for (let i = 0; i < uris.length / maxSongs; i++) {
+      uriIntervals.push(uris.slice(maxSongs * i, maxSongs * i + maxSongs));
+    }
+
+    for await (const [index, uriInterval] of uriIntervals.entries()) {
+      const data = JSON.stringify({
+        uris: uriInterval,
+        position: maxSongs * index,
+      });
+
+      await genericPost(`playlists/${playlist_id}/tracks`, token, data).then(
+        refreshPlaylists
+      );
+    }
   };
 
   /* track information from id (within a Promise) */
@@ -357,16 +367,6 @@ export function useApi() {
     songCache[song_id] = result;
 
     return result;
-  };
-
-  /* Updates order of song in playlist, returns snapshot id (within a Promise) */
-  const updatePlaylistOrder = (playlist_id, song_index, new_index) => {
-    const data = JSON.stringify({
-      range_start: song_index,
-      insert_before: new_index,
-      range_length: 1,
-    });
-    return genericPut(`playlists/${playlist_id}/tracks`, token, data);
   };
 
   const deletePlaylist = (playlist_id) => {
@@ -391,7 +391,6 @@ export function useApi() {
         createPlaylist: createPlaylist,
         addSongToPlaylist: addSongToPlaylist,
         getTrackById: getTrackById,
-        updatePlaylistOrder: updatePlaylistOrder,
         deletePlaylist: deletePlaylist,
         addSongUrisToPlaylist: addSongUrisToPlaylist,
       }

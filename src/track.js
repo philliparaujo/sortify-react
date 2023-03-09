@@ -1,21 +1,13 @@
+import {
+  ArrowDownward,
+  ArrowUpward,
+  Pause,
+  PlayArrow,
+} from "@mui/icons-material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useCallback } from "react";
 import { useDrag } from "react-dnd";
 import "./App.css";
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import {
-  ArrowUpward,
-  ArrowDownward,
-  PlayArrow,
-  Pause,
-} from "@mui/icons-material";
-import { useLayoutEffect } from "react";
 
 var colorCache = {};
 var songCache = {};

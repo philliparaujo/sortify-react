@@ -1,15 +1,5 @@
-import { Sort } from "@mui/icons-material";
-import { Save } from "@mui/icons-material";
-import { Hearing } from "@mui/icons-material";
-import {
-  Box,
-  Button,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Typography,
-} from "@mui/material";
+import { Hearing, Save, Sort } from "@mui/icons-material";
+import { Box, Button, Typography } from "@mui/material";
 
 export function Homepage({ login }) {
   return (
@@ -36,17 +26,38 @@ export function Homepage({ login }) {
 
       <Box>
         <Typography variant="h5" sx={{ p: 2, pt: 4 }}>
-          <Hearing></Hearing>Listen to playlist previews
+          <Hearing
+            style={{
+              verticalAlign: "middle",
+              display: "inline-flex",
+              marginRight: "8",
+            }}
+          ></Hearing>
+          Listen to playlist previews
         </Typography>
       </Box>
       <Box>
         <Typography variant="h5" sx={{ p: 2 }}>
-          <Sort></Sort>Sort your songs into tier lists
+          <Sort
+            style={{
+              verticalAlign: "middle",
+              display: "inline-flex",
+              marginRight: "8",
+            }}
+          ></Sort>
+          Sort your songs into tier lists
         </Typography>
       </Box>
       <Box>
         <Typography variant="h5" sx={{ p: 2 }}>
-          <Save></Save>Save your changes directly to Spotify
+          <Save
+            style={{
+              verticalAlign: "middle",
+              display: "inline-flex",
+              marginRight: "8",
+            }}
+          ></Save>
+          Save your changes directly to Spotify
         </Typography>
       </Box>
     </Box>

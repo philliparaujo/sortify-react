@@ -1,30 +1,16 @@
-import "./App.css";
 import React, { createContext, useState } from "react";
-import { useApi } from "./spotify.js";
-import { PlaylistPage } from "./playlistPage";
-import { NavBar } from "./navBar";
+import "./App.css";
 import { Menu } from "./menu";
+import { NavBar } from "./navBar";
+import { PlaylistPage } from "./playlistPage";
+import { useApi } from "./spotify.js";
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import {
-  Box,
-  Button,
-  createTheme,
-  Grid,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Paper,
-  Typography,
-} from "@mui/material";
 import { ThemeProvider } from "@emotion/react";
+import { Box, createTheme } from "@mui/material";
 import { useMemo } from "react";
-import { Hearing } from "@mui/icons-material";
-import { Sort } from "@mui/icons-material";
-import { Save } from "@mui/icons-material";
 import { Homepage } from "./homepage";
 
 export const PlaylistIndex = createContext();
@@ -64,15 +50,12 @@ export function App() {
   // TODO: change URIComponent to URL object & query params in spotify.js searchByTitle
   // TODO: handle duplicate song ids
 
-  // TODO: organize imports
-  // TODO: get playlist update to work on track dragg
-  // TODO: change navbar buttons to accordion
-  // TODO: fix spotify.js siteRoot stuff
+  // TODO: improve performance of playlist load
 
   // TODO: handle errors for: not being on dev group
   // not being added to redirect uris on spotify dev page
-  // charAt error on first login (menu)
-  // fix spotify add songs
+  // charAt error on first login (menu), fix siteRoot stuff (fixed?)
+  // fix playing same song after 30 seconds
 
   return (
     <ThemeProvider theme={theme}>
@@ -110,7 +93,6 @@ export function App() {
                   playlist={selectedPlaylist}
                   getPlaylistTrackIds={api.getPlaylistTrackIds}
                   getTrackById={api.getTrackById}
-                  updatePlaylistOrder={api.updatePlaylistOrder}
                   deletePlaylist={api.deletePlaylist}
                   createPlaylist={api.createPlaylist}
                   addSongToPlaylist={api.addSongToPlaylist}

@@ -2,8 +2,6 @@ import { useContext, useEffect, useState } from "react";
 import { NavBarVisible, PlaylistIndex } from "./App.js";
 
 import {
-  Accordion,
-  AccordionSummary,
   Box,
   CssBaseline,
   Divider,
@@ -12,7 +10,6 @@ import {
   ListItemButton,
   ListItemText,
   TextField,
-  Typography,
 } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
 
