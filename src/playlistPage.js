@@ -125,20 +125,6 @@ export function PlaylistPage({
     [setBucketTracks]
   );
 
-  const addSongToNewPlaylist = async (track, playlistId) => {
-    return getTrackById(track)
-      .then((result) => result.name)
-      .then((result) => addSongToPlaylist(playlistId, result))
-      .then(console.log("DONE", track));
-  };
-
-  async function updatePlaylist(sortedTracks) {
-    createPlaylist(`${title} copy`).then(async (result) => {
-      const playlistId = result.id;
-      addSongUrisToPlaylist(playlistId, sortedTracks);
-    });
-  }
-
   async function generateSortedPlaylist(sortedTracks) {
     createPlaylist(`[sorted] ${title}`).then(async (result) =>
       addSongUrisToPlaylist(result.id, sortedTracks)
