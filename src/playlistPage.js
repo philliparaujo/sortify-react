@@ -114,26 +114,21 @@ export function PlaylistPage({
   };
 
   /* Handling state of tracks in bucket */
-  const handleTracksUpdate = React.useCallback(
-    (bucketId, tracks) => {
-      const newTracks = { [bucketId]: tracks };
+  const handleTracksUpdate = (bucketId, tracks) => {
+    const newTracks = { [bucketId]: tracks };
 
-      setBucketTracks((currentBucketTracks) => {
-        const result = {
-          ...currentBucketTracks,
-          ...newTracks,
-        };
+    setBucketTracks((currentBucketTracks) => {
+      const result = {
+        ...currentBucketTracks,
+        ...newTracks,
+      };
 
-        if (areObjectsEqual(result, currentBucketTracks)) {
-          return currentBucketTracks;
-        }
-        return result;
-      });
-    },
-    [setBucketTracks]
-  );
-
-  useEffect(() => {}, [bucketTracks]);
+      if (areObjectsEqual(result, currentBucketTracks)) {
+        return currentBucketTracks;
+      }
+      return result;
+    });
+  };
 
   async function generateSortedPlaylist(sortedTracks) {
     createPlaylist(`[sorted] ${title}`).then(async (result) =>
@@ -146,10 +141,7 @@ export function PlaylistPage({
       return false;
     }
     for (let i = 0; i < array1.length; i++) {
-      if (
-        array1[i].toString === undefined ||
-        array2[i].toString === undefined
-      ) {
+      if (array1[i] === undefined || array2[i] === undefined) {
         return false;
       }
 

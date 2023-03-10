@@ -3,6 +3,7 @@ import "./wdyr";
 import { Box } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDrop } from "react-dnd";
+import "react-virtualized/styles.css";
 import { Track as TrackComponent } from "./track";
 
 export function Bucket({
@@ -53,14 +54,14 @@ export function Bucket({
 
   /* Dragging functionality */
   const addTrackToBucket = (trackId) => {
-    setTrackIds((oldTrackIds) => [...oldTrackIds, trackId]);
+    setTrackIds((oldTrackIds) => [trackId, ...oldTrackIds]);
   };
 
   const handleRemove = (currentId) => {
-    const index = trackIds.indexOf(currentId);
-    if (index < trackIds.length - 1) {
-      moveTrackLocal(index, trackIds.length - 1);
-    }
+    // const index = trackIds.indexOf(currentId);
+    // if (index < trackIds.length - 1) {
+    //   moveTrackLocal(index, trackIds.length - 1);
+    // }
     setTrackIds((oldTrackIds) => {
       return oldTrackIds.filter((oldId) => oldId !== currentId);
     });
@@ -110,7 +111,10 @@ export function Bucket({
       ref={drop}
       id={id}
       className="bucket"
-      style={{ backgroundColor: isOver ? "red" : "#333" }}
+      style={{
+        backgroundColor: isOver ? "red" : "#333",
+        height: "fit-content",
+      }}
     >
       {trackIds.map((trackId) => (
         <Track

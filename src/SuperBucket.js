@@ -19,7 +19,7 @@ export function SuperBucket({
   getSpeed,
 }) {
   return (
-    <Box className="superBucket">
+    <Box className="superBucket" id="superBucket">
       {bucketIds.map((id) => {
         return (
           <Bucket
