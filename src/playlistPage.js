@@ -1,24 +1,20 @@
-import React, { useEffect, useState } from "react";
+import "./wdyr";
+
+import { Box, Divider } from "@mui/material";
+import React, { useEffect, useMemo, useState } from "react";
 import "react-confirm-alert/src/react-confirm-alert.css"; // confirmAlert CSS
+import { Subscription } from "./subscription";
 import { SuperBucket } from "./SuperBucket";
+import { TopPlaylistPage } from "./topPlaylistPage";
 
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Divider,
-  Link,
-  Slider,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import { useCallback } from "react";
-
-import { SlowMotionVideo, VolumeDown } from "@mui/icons-material";
+var pauseCurrentTrack;
+var setPauseCurrentTrack = (setterOrValue) => {
+  if (setterOrValue instanceof Function) {
+    pauseCurrentTrack = setterOrValue(pauseCurrentTrack);
+  } else {
+    pauseCurrentTrack = setterOrValue;
+  }
+};
 
 export function PlaylistPage({
   playlist,
@@ -26,17 +22,12 @@ export function PlaylistPage({
   getTrackById,
   deletePlaylist,
   createPlaylist,
-  addSongToPlaylist,
   addSongUrisToPlaylist,
 }) {
   const [bucketTracks, setBucketTracks] = useState({}); // hash of buckets & tracks
   const [originalTracks, setOriginalTracks] = useState([]); // array of all tracks on playlist load
   const [sortedTracks, setSortedTracks] = useState([]); // array of all tracks
-  const [pauseCurrentTrack, setPauseCurrentTrack] = useState();
-  const [newId, setNewId] = useState(0);
-  const [openDialog, setOpenDialog] = useState(false);
-  const [speed, setSpeed] = useState(1.0);
-  const [volume, setVolume] = useState(0.1);
+  const bucketIds = Object.keys(bucketTracks);
 
   const id = playlist.id;
   const title = playlist.name;
@@ -46,20 +37,19 @@ export function PlaylistPage({
   // const image = playlist.images;
   // const userId = playlist.owner.id;
 
-  const bucketIdWithPlaylistId = 0;
+  var bucketIdWithPlaylistId = 0;
+
+  const [volumeSubs] = useState(new Subscription(0.1));
+  const [speedSubs] = useState(new Subscription(1.0));
 
   /* Useful playlistPage-only functions */
-  const addBucket = useCallback(() => {
-    const newBucketTrack = { [newId]: [] };
-    setBucketTracks((oldBucketTracks) => {
-      return {
-        ...oldBucketTracks,
-        ...newBucketTrack,
-      };
+  const addBucket = (newId) => {
+    setBucketTracks((oldTracks) => {
+      const newTracks = { ...oldTracks };
+      newTracks[newId] = [];
+      return newTracks;
     });
-
-    setNewId(newId + 1);
-  }, [newId]);
+  };
 
   const removeEmptyBucket = () => {
     const arrayOfBucketIds = Object.keys(bucketTracks);
@@ -81,22 +71,33 @@ export function PlaylistPage({
 
   /* Re-render on playlist select */
   useEffect(() => {
-    setBucketTracks({});
-    setNewId(0);
-    getPlaylistTrackIds(id).then((result) => setOriginalTracks(result));
+    if (!areObjectsEqual(bucketTracks, {})) {
+      setBucketTracks({});
+    }
+    getPlaylistTrackIds(id).then((result) =>
+      setOriginalTracks((result) => {
+        if (areArraysEqual(originalTracks, result)) {
+          return originalTracks;
+        }
+        return result;
+      })
+    );
   }, [id, getPlaylistTrackIds]);
 
   /* Add bucket if currently no bucket (should only trigger on id change) */
   useEffect(() => {
     if (Object.keys(bucketTracks).length === 0) {
-      addBucket();
+      addBucket(bucketIdWithPlaylistId);
     }
-  }, [bucketTracks, addBucket]);
+  }, [bucketTracks, bucketIdWithPlaylistId]);
 
   /* Keeps sorted tracks updated */
   useEffect(() => {
-    setSortedTracks(Object.values(bucketTracks).flat());
-  }, [bucketTracks]);
+    const newList = Object.values(bucketTracks).flat();
+    if (!areArraysEqual(newList, sortedTracks)) {
+      setSortedTracks(newList);
+    }
+  }, [bucketTracks, sortedTracks]);
 
   /* Handling memory of playing songs */
   const handlePlay = (pauseMe) => {
@@ -117,13 +118,22 @@ export function PlaylistPage({
     (bucketId, tracks) => {
       const newTracks = { [bucketId]: tracks };
 
-      setBucketTracks((currentBucketTracks) => ({
-        ...currentBucketTracks,
-        ...newTracks,
-      }));
+      setBucketTracks((currentBucketTracks) => {
+        const result = {
+          ...currentBucketTracks,
+          ...newTracks,
+        };
+
+        if (areObjectsEqual(result, currentBucketTracks)) {
+          return currentBucketTracks;
+        }
+        return result;
+      });
     },
     [setBucketTracks]
   );
+
+  useEffect(() => {}, [bucketTracks]);
 
   async function generateSortedPlaylist(sortedTracks) {
     createPlaylist(`[sorted] ${title}`).then(async (result) =>
@@ -131,144 +141,73 @@ export function PlaylistPage({
     );
   }
 
-  const areArraysEqual = (array1, array2) => {
+  function areArraysEqual(array1, array2) {
     if (array1.length !== array2.length) {
       return false;
     }
     for (let i = 0; i < array1.length; i++) {
-      if (array1[i].localeCompare(array2[i]) !== 0) {
+      if (
+        array1[i].toString === undefined ||
+        array2[i].toString === undefined
+      ) {
+        return false;
+      }
+
+      if (array1[i].toString().localeCompare(array2[i].toString()) !== 0) {
         return false;
       }
     }
     return true;
-  };
+  }
+
+  function areObjectsEqual(object1, object2) {
+    return JSON.stringify(object1) === JSON.stringify(object2);
+  }
+
+  const saveDisabled = useMemo(
+    () => areArraysEqual(originalTracks, sortedTracks),
+    [originalTracks, sortedTracks]
+  );
 
   return (
     <Box>
-      <Tooltip title="Open in Spotify" placement="bottom" followCursor>
-        <Link
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          variant="h3"
-          sx={{ fontWeight: "medium" }}
-        >
-          {title}
-        </Link>
-      </Tooltip>
-
-      <Typography variant="h6">{displayName}</Typography>
-
-      <Box>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={() => setOpenDialog(true)}
-        >
-          Delete playlist
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={() => {
-            generateSortedPlaylist(sortedTracks);
-          }}
-          disabled={areArraysEqual(originalTracks, sortedTracks)}
-        >
-          Save
-        </Button>
-      </Box>
-      <Box>
-        <Button variant="contained" onClick={addBucket}>
-          Add bucket
-        </Button>
-        <Button variant="contained" onClick={removeEmptyBucket}>
-          Remove empty bucket
-        </Button>
-      </Box>
-
-      <div style={{ display: "inline-flex", flexDirection: "row" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: 4,
-            paddingRight: 16,
-          }}
-        >
-          <Tooltip title="Playback speed">
-            <SlowMotionVideo />
-          </Tooltip>
-
-          <Slider
-            defaultValue={1.0}
-            step={0.25}
-            marks
-            min={0.5}
-            max={2.0}
-            value={speed}
-            sx={{ width: 200 }}
-            onChange={(e) => setSpeed(e.target.value)}
-            valueLabelDisplay="auto"
-          />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: 4,
-            paddingLeft: 16,
-          }}
-        >
-          <Tooltip title="Volume">
-            <VolumeDown />
-          </Tooltip>
-
-          <Slider
-            defaultValue={0.1}
-            step={0.01}
-            min={0}
-            max={0.5}
-            value={volume}
-            sx={{ width: 200 }}
-            onChange={(e) => setVolume(e.target.value)}
-          />
-        </div>
-      </div>
+      <TopPlaylistPage
+        url={url}
+        title={title}
+        displayName={displayName}
+        sortedTracks={sortedTracks}
+        saveDisabled={saveDisabled}
+        generateSortedPlaylist={generateSortedPlaylist}
+        addBucket={addBucket}
+        removeEmptyBucket={removeEmptyBucket}
+        deletePlaylist={deletePlaylist}
+        id={id}
+        notifyVolume={volumeSubs.notify}
+        initialVolume={volumeSubs.initialValue()}
+        notifySpeed={speedSubs.notify}
+        initialSpeed={speedSubs.initialValue()}
+      />
 
       <Divider />
-
-      {/* Delete playlist dialog */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Delete {title}?</DialogTitle>
-        <DialogContent>
-          <DialogContentText></DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setOpenDialog(false);
-              deletePlaylist(id);
-            }}
-          >
-            Yes
-          </Button>
-          <Button onClick={() => setOpenDialog(false)}>No</Button>
-        </DialogActions>
-      </Dialog>
 
       <SuperBucket
         handlePlay={handlePlay}
         handlePause={handlePause}
         getTrackById={getTrackById}
         getPlaylistTrackIds={getPlaylistTrackIds}
-        handleTracksUpdate={handleTracksUpdate}
-        bucketIds={Object.keys(bucketTracks)}
+        onTracksUpdate={handleTracksUpdate}
+        bucketIds={bucketIds}
         bucketIdWithPlaylistId={bucketIdWithPlaylistId}
         playlistId={id}
-        speed={speed}
-        volume={volume}
+        subscribeVolume={volumeSubs.add}
+        unsubscribeVolume={volumeSubs.remove}
+        getVolume={volumeSubs.value}
+        subscribeSpeed={speedSubs.add}
+        unsubscribeSpeed={speedSubs.remove}
+        getSpeed={speedSubs.value}
       ></SuperBucket>
     </Box>
   );
 }
+
+PlaylistPage.whyDidYouRender = true;

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 
 const siteRoot = new URL(document.location);
-console.log(siteRoot);
 
 /* to prevent repeat id fetching */
 var songCache = {};
@@ -297,15 +296,10 @@ export function useApi() {
       public: true,
     });
 
-    return genericPost(`users/${id}/playlists`, token, data)
-      .then((result) => {
-        refreshPlaylists();
-        return result;
-      })
-      .then((result) => {
-        console.log(result);
-        return result;
-      });
+    return genericPost(`users/${id}/playlists`, token, data).then((result) => {
+      console.log(result);
+      return result;
+    });
   };
 
   /* add song matching search bar to playlist */
@@ -316,7 +310,6 @@ export function useApi() {
     return searchByTitle(title, token)
       .then((result) => getTrackById(result[0]))
       .then((result) => {
-        console.log(result);
         const numSongs = getPlaylistTrackIds(playlist_id).length;
         const data = JSON.stringify({
           uris: [result.uri],

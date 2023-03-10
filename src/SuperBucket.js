@@ -1,19 +1,22 @@
+import { Box } from "@mui/material";
 import React from "react";
 import { Bucket } from "./Bucket";
-
-import { Box } from "@mui/material";
 
 export function SuperBucket({
   handlePlay,
   handlePause,
   getTrackById,
   getPlaylistTrackIds,
-  handleTracksUpdate,
+  onTracksUpdate,
   bucketIds,
   bucketIdWithPlaylistId,
   playlistId,
-  speed,
-  volume,
+  subscribeVolume,
+  unsubscribeVolume,
+  getVolume,
+  subscribeSpeed,
+  unsubscribeSpeed,
+  getSpeed,
 }) {
   return (
     <Box className="superBucket">
@@ -27,9 +30,13 @@ export function SuperBucket({
             onPlay={(pauseMe) => handlePlay(pauseMe)}
             onPause={handlePause}
             getTrackById={getTrackById}
-            handleTracksUpdate={handleTracksUpdate}
-            speed={speed}
-            volume={volume}
+            onTracksUpdate={onTracksUpdate}
+            subscribeVolume={subscribeVolume}
+            unsubscribeVolume={unsubscribeVolume}
+            getVolume={getVolume}
+            subscribeSpeed={subscribeSpeed}
+            unsubscribeSpeed={unsubscribeSpeed}
+            getSpeed={getSpeed}
           />
         );
       })}

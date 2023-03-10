@@ -1,5 +1,4 @@
-import { useContext, useEffect, useState } from "react";
-import { NavBarVisible, PlaylistIndex } from "./App.js";
+import "./wdyr";
 
 import {
   Box,
@@ -9,9 +8,11 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  TextField,
 } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
+import { useContext, useEffect, useState } from "react";
+import { NavBarVisible, PlaylistIndex } from "./App.js";
+import { TopNavBar } from "./topNavBar.js";
 
 export function NavBar({
   isLoggedIn,
@@ -21,12 +22,11 @@ export function NavBar({
   refreshPlaylists,
   createPlaylist,
   addSongToPlaylist,
+  open,
 }) {
   const { visible } = useContext(NavBarVisible);
   const { setPlaylistIndex } = useContext(PlaylistIndex);
   const [lastPlaylistId, setLastPlaylistId] = useState(undefined);
-  const [newPlaylistName, setNewPlaylistName] = useState("");
-  const [newSongInput, setNewSongInput] = useState("");
 
   useEffect(() => {
     if (lastPlaylistId && selectedPlaylist) {
@@ -57,7 +57,7 @@ export function NavBar({
   return (
     <Box sx={{ display: "flex" }} style={{ background: "transparent" }}>
       <CssBaseline enableColorScheme />
-      {isLoggedIn && playlists && visible ? (
+      {isLoggedIn && playlists && open ? (
         <Drawer
           sx={{
             width: drawerWidth,
@@ -72,57 +72,14 @@ export function NavBar({
           open
         >
           <Divider />
-          <List>
-            <ListItem key={"H1"} disablePadding>
-              <ListItemButton onClick={refreshPlaylists}>
-                <ListItemText primary={"Refresh playlists"} />
-              </ListItemButton>
-            </ListItem>
-            <ListItem key={"H2"} disablePadding>
-              <ListItemButton
-                disabled={!Boolean(selectedPlaylist)}
-                onClick={deselectPlaylist}
-              >
-                <ListItemText primary={"Deselect playlist"} />
-              </ListItemButton>
-            </ListItem>
-            <ListItem key={"H3"} disablePadding>
-              <ListItemButton
-                disabled={!Boolean(newPlaylistName)}
-                onClick={() => {
-                  createPlaylist(newPlaylistName);
-                  setNewPlaylistName("");
-                }}
-              >
-                <ListItemText primary={"Create playlist"} />
-              </ListItemButton>
-              <TextField
-                style={{ paddingRight: 15 }}
-                size="small"
-                variant="outlined"
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-              />
-            </ListItem>
-            <ListItem key={"H4"} disablePadding>
-              <ListItemButton
-                disabled={!Boolean(newSongInput)}
-                onClick={() => {
-                  addSongToPlaylistNew(selectedPlaylist.id, newSongInput);
-                  setNewSongInput("");
-                }}
-              >
-                <ListItemText primary={"Add song"} />
-              </ListItemButton>
-              <TextField
-                style={{ paddingRight: 15 }}
-                size="small"
-                variant="outlined"
-                value={newSongInput}
-                onChange={(e) => setNewSongInput(e.target.value)}
-              />
-            </ListItem>
-          </List>
+
+          <TopNavBar
+            refreshPlaylists={refreshPlaylists}
+            selectedPlaylist={selectedPlaylist}
+            deselectPlaylist={deselectPlaylist}
+            createPlaylist={createPlaylist}
+            addSongToPlaylistNew={addSongToPlaylistNew}
+          />
 
           <Divider />
 
@@ -146,3 +103,5 @@ export function NavBar({
     </Box>
   );
 }
+
+NavBar.whyDidYouRender = true;

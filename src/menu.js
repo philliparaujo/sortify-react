@@ -1,6 +1,3 @@
-import { useState } from "react";
-import { NavBarVisible } from "./App";
-
 import MenuIcon from "@mui/icons-material/Menu";
 import {
   AppBar,
@@ -13,7 +10,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { useContext } from "react";
+import { useState } from "react";
 
 export function Menu({
   isLoggedIn,
@@ -22,9 +19,9 @@ export function Menu({
   login,
   logout,
   toggleTheme,
+  setVisible,
 }) {
   const [anchorElUser, setAnchorElUser] = useState(null);
-  const { setVisible } = useContext(NavBarVisible);
 
   const settings = [`Hi ${name}!`, "Open Spotify", "Change theme", "Logout"];
   const settingClick = [
@@ -65,7 +62,11 @@ export function Menu({
           {isLoggedIn ? (
             <Box>
               <IconButton onClick={handleOpenLoggedInMenu}>
-                <Avatar>{name.charAt(0).toUpperCase()}</Avatar>
+                {name ? (
+                  <Avatar>{name.charAt(0).toUpperCase()}</Avatar>
+                ) : (
+                  <Avatar />
+                )}
               </IconButton>
               <Popover
                 anchorEl={anchorElUser}

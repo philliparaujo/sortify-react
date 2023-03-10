@@ -1,3 +1,5 @@
+import "./wdyr";
+
 import {
   ArrowDownward,
   ArrowUpward,
@@ -20,8 +22,12 @@ export function Track({
   handleRemove,
   onMoveUp,
   onMoveDown,
-  speed,
-  volume,
+  subscribeVolume,
+  unsubscribeVolume,
+  getVolume,
+  subscribeSpeed,
+  unsubscribeSpeed,
+  getSpeed,
 }) {
   const [darkBackground, setDarkBackground] = useState(true);
 
@@ -37,6 +43,24 @@ export function Track({
   // const [durationMs, setDurationMs] = useState();
   // const [explicit, setExplicit] = useState();
 
+  const onVolumeChange = (newVolume) => {
+    audioRef.current.volume = newVolume;
+  };
+
+  const onSpeedChange = (newSpeed) => {
+    audioRef.current.playbackRate = newSpeed;
+  };
+
+  useEffect(() => {
+    subscribeVolume(onVolumeChange);
+    return () => unsubscribeVolume(onVolumeChange); // on component unmount
+  }, [subscribeVolume, unsubscribeVolume]);
+
+  useEffect(() => {
+    subscribeSpeed(onSpeedChange);
+    return () => unsubscribeSpeed(onSpeedChange); // on component unmount
+  }, [subscribeSpeed, unsubscribeSpeed]);
+
   /* on load, fetch track id info */
   useEffect(() => {
     const applyTrackInfo = (trackInfo) => {
@@ -45,7 +69,10 @@ export function Track({
       }
 
       setName(trackInfo.name);
-      if (trackInfo.album.images && trackInfo.album.images.length > 0) {
+      if (
+        trackInfo.album.images !== undefined &&
+        trackInfo.album.images.length > 0
+      ) {
         setImageUrl(trackInfo.album.images[0].url);
       }
       setPreviewUrl(trackInfo.preview_url);
@@ -57,16 +84,18 @@ export function Track({
       if (!trackInfo) {
         getTrackById(id)
           .then((result) => {
-            console.log("fetching");
-            songCache[id] = result;
+            if (result.album !== undefined) {
+              songCache[id] = result;
 
-            applyTrackInfo(result);
-            return result;
+              applyTrackInfo(result);
+              return result;
+            }
+            throw Error;
           })
           .then(() => {})
           .catch((error) => {
             console.log("ERRRRRRORRRRRRR");
-            fetch();
+            setTimeout(() => fetch(), 1000);
           });
       } else {
         applyTrackInfo(trackInfo);
@@ -115,18 +144,6 @@ export function Track({
       }
     }
   }, [playing, previewUrl]);
-
-  useEffect(() => {
-    if (playing && audioRef.current) {
-      audioRef.current.volume = volume;
-    }
-  }, [playing, volume]);
-
-  useEffect(() => {
-    if (playing && audioRef.current) {
-      audioRef.current.playbackRate = speed;
-    }
-  }, [playing, speed]);
 
   /* Colors tracks, sets up play button and audio on load */
   const getAverageRGB = (img) => {
@@ -265,8 +282,8 @@ export function Track({
           type="audio/mp3"
           onEnded={pauseMe}
           onCanPlay={(e) => {
-            e.target.playbackRate = speed;
-            e.target.volume = volume;
+            e.target.playbackRate = getSpeed();
+            e.target.volume = getVolume();
           }}
         />
         <img
@@ -290,3 +307,5 @@ export function Track({
     </div>
   );
 }
+
+Track.whyDidYouRender = true;

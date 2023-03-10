@@ -1,3 +1,5 @@
+import "./wdyr";
+
 import { Box } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDrop } from "react-dnd";
@@ -10,9 +12,13 @@ export function Bucket({
   onPlay,
   onPause,
   getTrackById,
-  handleTracksUpdate,
-  speed,
-  volume,
+  onTracksUpdate,
+  subscribeVolume,
+  unsubscribeVolume,
+  getVolume,
+  subscribeSpeed,
+  unsubscribeSpeed,
+  getSpeed,
   Track = TrackComponent,
 }) {
   const [trackIds, setTrackIds] = useState([]);
@@ -31,12 +37,9 @@ export function Bucket({
           setIdsFetched(true);
           return result;
         })
-        .then((result) => {
-          return result;
-        })
         .catch((error) => {
           console.log("ERRORRRRR");
-          fetch();
+          setTimeout(() => fetch(), 1000);
         });
     };
 
@@ -45,8 +48,8 @@ export function Bucket({
 
   /* on track id update, update tracks for playlistPage */
   useEffect(() => {
-    handleTracksUpdate(id, trackIds);
-  }, [trackIds, id, handleTracksUpdate]);
+    onTracksUpdate(id, trackIds);
+  }, [trackIds, id, onTracksUpdate]);
 
   /* Dragging functionality */
   const addTrackToBucket = (trackId) => {
@@ -116,11 +119,15 @@ export function Bucket({
           getTrackById={getTrackById}
           onPlay={onPlay}
           onPause={onPause}
-          speed={speed}
-          volume={volume}
           handleRemove={handleRemove}
           onMoveUp={onMoveUp}
           onMoveDown={onMoveDown}
+          subscribeVolume={subscribeVolume}
+          unsubscribeVolume={unsubscribeVolume}
+          getVolume={getVolume}
+          subscribeSpeed={subscribeSpeed}
+          unsubscribeSpeed={unsubscribeSpeed}
+          getSpeed={getSpeed}
         />
       ))}
 
@@ -134,3 +141,5 @@ export function Bucket({
     </div>
   );
 }
+
+Bucket.whyDidYouRender = true;
