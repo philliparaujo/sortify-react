@@ -1,9 +1,9 @@
 import React from "react";
-import { Bucket } from "./Bucket";
-import "./index.css";
-import "./App.css";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import "./App.css";
+import { Bucket } from "./Bucket";
+import "./index.css";
 
 const fakeTrack = ({ id }) => (
   <div className="track" style={{ height: 35 }}>

@@ -1,13 +1,13 @@
 import React from "react";
-import { Track } from "./track";
-import darkImage from "./testData/darkAlbumImage.png";
-import defaultImage from "./testData/spotifyLogo.png";
-import lightImage from "./testData/lightAlbumImage.jpg";
-import previewSong from "./testData/defaultPreviewSong.mp3";
-import "./index.css";
-import "./App.css";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import "./App.css";
+import "./index.css";
+import darkImage from "./testData/darkAlbumImage.png";
+import previewSong from "./testData/defaultPreviewSong.mp3";
+import lightImage from "./testData/lightAlbumImage.jpg";
+import defaultImage from "./testData/spotifyLogo.png";
+import { Track } from "./track";
 
 const defaultTrackData = {
   name: "Default Song",
