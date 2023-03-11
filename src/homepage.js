@@ -60,6 +60,7 @@ export function Homepage({ login }) {
           Save your changes directly to Spotify
         </Typography>
       </Box>
+      <Box>0.0.4a</Box>
     </Box>
   );
 }

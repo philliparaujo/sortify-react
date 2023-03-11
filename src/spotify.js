@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
 const siteRoot = new URL(document.location);
+const redirectUri = encodeURIComponent(siteRoot.toString());
+console.log("site", siteRoot, redirectUri);
 
 /* to prevent repeat id fetching */
 var songCache = {};
@@ -9,7 +11,7 @@ var songCache = {};
  */
 const authInfo = {
   CLIENT_ID: "4e395fc704b74c3dafb22621444b1e64",
-  REDIRECT_URI: siteRoot.origin,
+  REDIRECT_URI: redirectUri,
   AUTH_ENDPOINT: "https://accounts.spotify.com/authorize",
   RESPONSE_TYPE: "token",
   SCOPES: [
