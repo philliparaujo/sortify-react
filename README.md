@@ -4,7 +4,7 @@
 
 [Demo: See the app live](https://philliparaujo.github.io/sortify-react/)
 
-## Functionalty
+## Functionality
 - Connects with Spotify account (user, playlists, songs)
 - Ability to rearrange songs within playlists and save them
 - Has a 30-second preview for most songs, speed/volume control
