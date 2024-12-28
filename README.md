@@ -7,7 +7,7 @@
 ## Functionality
 - Connects with Spotify account (user, playlists, songs)
 - Ability to rearrange songs within playlists and save them
-- Has a 30-second preview for most songs, speed/volume control
+- Has a 30-second preview for most songs, speed/volume control **[DEPRACATED as of [Nov 2024](https://developer.spotify.com/blog/2024-11-27-changes-to-the-web-api)]**
 
 ## Development
 - Created using [React](https://reactjs.org/)
