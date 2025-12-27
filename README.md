@@ -1,6 +1,7 @@
 # sortify-react
 
 ## Demo
+**App is largely deprecated due to Spotify Web API changes*
 
 [Demo: See the app live](https://philliparaujo.github.io/sortify-react/)
 
